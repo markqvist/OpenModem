@@ -5,7 +5,7 @@
 #include "device.h"
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define CLOCK_TICKS_PER_SEC CONFIG_AFSK_DAC_SAMPLERATE
+#define CLOCK_TICKS_PER_SEC CONFIG_SAMPLERATE
 
 typedef int32_t ticks_t;
 typedef int32_t mtime_t;

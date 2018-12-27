@@ -2,6 +2,11 @@
 #include "AFSK.h"
 #include "util/time.h"
 
+// TODO: Remove testing vars
+#define SAMPLES_TO_CAPTURE 128
+ticks_t capturedsamples = 0;
+uint8_t samplebuf[SAMPLES_TO_CAPTURE];
+
 extern volatile ticks_t _clock;
 extern unsigned long custom_preamble;
 extern unsigned long custom_tail;
@@ -14,43 +19,51 @@ Afsk *AFSK_modem;
 int afsk_getchar(FILE *strem);
 int afsk_putchar(char c, FILE *stream);
 
-void AFSK_hw_refDetect(void) {
-    // This is manual for now
-    #if ADC_REFERENCE == REF_5V
-        hw_5v_ref = true;
-    #else
-        hw_5v_ref = false;
-    #endif
-}
-
+// ADC and clock setup
 void AFSK_hw_init(void) {
-    // Set up ADC
 
-    AFSK_hw_refDetect();
+    // Set Timer1 to normal operation
+    TCCR1A = 0;
 
-    TCCR1A = 0;                                    
-    TCCR1B = _BV(CS10) | _BV(WGM13) | _BV(WGM12);
-    ICR1 = (((CPU_FREQ+FREQUENCY_CORRECTION)) / 9600) - 1;
+    TCCR1B =    _BV(WGM13) |    // Enable Timer1 Waveform Generation Mode 12:
+                _BV(WGM12) |    // Mode = CTC, TOP = ICR1
+                _BV(CS10);      // Set clock source to 0b001 = System clock without prescaling
 
-    if (hw_5v_ref) {
-        ADMUX = _BV(REFS0) | 0;
-    } else {
-        ADMUX = 0;
-    }
+    // Set ICR1 register to the amount of ticks needed between
+    // each sample capture/synthesis
+    ICR1 = TICKS_BETWEEN_SAMPLES;
 
-    ADC_DDR  &= ~_BV(0);
-    ADC_PORT &= ~_BV(0);
+    // Set ADMUX register to use external AREF, channel ADC0
+    // and left adjust result
+    ADMUX = _BV(ADLAR) | 0;
+
+    // Set ADC port directions and outputs
+    // TODO: Check this
+    ADC_DDR  &= ~_BV(0); // 0b11111110 - All pins are outputs, except ADC0
+    ADC_PORT &= 0x00;    // 0b00000000 - All pins are at GND level
+
+    // Set Digital Input Disable Register mask to 0b00000001,
+    // which disables the input buffer on ADC0 pin to avoid
+    // current through the pin.
     DIDR0 |= _BV(0);
-    ADCSRB =    _BV(ADTS2) |
-                _BV(ADTS1) |
-                _BV(ADTS0);  
-    ADCSRA =    _BV(ADEN) |
-                _BV(ADSC) |
-                _BV(ADATE)|
-                _BV(ADIE) |
-                _BV(ADPS2);
 
+
+    ADCSRB =    _BV(ADTS2) |    
+                _BV(ADTS1) |
+                _BV(ADTS0);     // Set ADC Trigger Source to 0b111 = Timer1 Capture Event
+
+    ADCSRA =    _BV(ADEN) |     // ADC Enable
+                _BV(ADSC) |     // ADC Start Conversion
+                _BV(ADATE)|     // ADC Interrupt Flag
+                _BV(ADIE) |     // ADC Interrupt Enable
+                _BV(ADPS0)|
+                _BV(ADPS2);     // Set ADC prescaler bits to 0b101 = 32
+                                // At 16MHz, this gives an ADC clock of 500 KHz
+
+    // Run DAC initialisation
     AFSK_DAC_INIT();
+
+    // Run LED initialisation
     LED_TX_INIT();
     LED_RX_INIT();
 }
@@ -536,11 +549,33 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
-    AFSK_adc_isr(AFSK_modem, ((int16_t)((ADC) >> 2) - 128));
+    AFSK_adc_isr(AFSK_modem, (ADCH - 128));
+    
     if (hw_afsk_dac_isr) {
-        DAC_PORT = (AFSK_dac_isr(AFSK_modem) & 0xF0) | _BV(3); 
+        DAC_PORT = AFSK_dac_isr(AFSK_modem);
+        LED_TX_ON();
     } else {
         DAC_PORT = 128;
     }
+
     ++_clock;
+
+    /*
+    // TODO: Remove these debug sample collection functions
+    if (capturedsamples == SAMPLES_TO_CAPTURE) {
+        printf("--- Dumping samples ---");
+        for (ticks_t i = 0; i < SAMPLES_TO_CAPTURE; i++) {
+            uint8_t c = samplebuf[i];
+            printf("%d\r\n", c);
+        }
+        printf("-------- Done ---------");
+    }
+    DAC_PORT ^= 0xFF;
+    if (capturedsamples < SAMPLES_TO_CAPTURE) {
+        samplebuf[capturedsamples++] = ADCH;
+        // Clear Input Capture Flag from Timer1 Interrupt Flag Register
+        // to allow for next capture interrupt to occur
+        TIFR1 = _BV(ICF1);
+    }
+    */
 }

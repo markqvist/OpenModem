@@ -1,5 +1,5 @@
 #define PROTOCOL_KISS 0x01
-#define PROTOCOL_SIMPLE_SERIAL 0x02
+#define PROTOCOL_RAW 0x02
 
 #define m328p  0x01
 #define m1284p 0x02

@@ -7,20 +7,15 @@
 #                customize the avrdude settings below first!
 
 # Microcontroller Type
-#MCU = atmega1284p
-#MCU = atmega644p
-MCU = atmega328p
+MCU = atmega1284p
 
 # Target file name (without extension).
-TARGET = images/MicroAPRS
+TARGET = images/OpenModem
 
 # Programming hardware: type avrdude -c ?
 # to get a full listing.
 AVRDUDE_PROGRAMMER = arduino       
-
 AVRDUDE_PORT = /dev/usb    # not really needed for usb 
-#AVRDUDE_PORT = /dev/parport0           # linux
-# AVRDUDE_PORT = lpt1		       # windows
 
 ############# Don't need to change below here for most purposes  (Elliot)
 
@@ -33,7 +28,7 @@ FORMAT = ihex
 
 # List C source files here. (C dependencies are automatically generated.)
 #SRC = $(TARGET).c
-SRC = main.c hardware/Serial.c hardware/AFSK.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c protocol/SimpleSerial.c
+SRC = main.c hardware/Serial.c hardware/AFSK.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
 
 # If there is more than one source file, append them above, or modify and
 # uncomment the following:

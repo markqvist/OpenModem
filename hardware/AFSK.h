@@ -47,10 +47,9 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TRAILER_LEN 50UL
 #define BIT_STUFF_LEN 5
 
-#define SAMPLERATE 9600
 #define BITRATE    1200
-
-#define SAMPLESPERBIT (SAMPLERATE / BITRATE)
+#define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
+#define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
 #define PHASE_INC    1                              // Nudge by an eigth of a sample each adjustment
 
 #define DCD_MIN_COUNT 6
@@ -136,12 +135,15 @@ typedef struct Afsk
 } Afsk;
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))
-#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_AFSK_DAC_SAMPLERATE))
+#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_SAMPLERATE))
+#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_SAMPLERATE))
 
 #define AFSK_DAC_IRQ_START()   do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = true; } while (0)
 #define AFSK_DAC_IRQ_STOP()    do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = false; } while (0)
-#define AFSK_DAC_INIT()        do { DAC_DDR |= 0xF8; } while (0)
+
+// DAC uses all 8 pins of one port, set all pins to
+// output direction
+#define AFSK_DAC_INIT()        do { DAC_DDR |= 0xFF; } while (0)
 
 // Here's some macros for controlling the RX/TX LEDs
 // THE _INIT() functions writes to the DDRB register

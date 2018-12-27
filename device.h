@@ -4,42 +4,31 @@
 #define DEVICE_CONFIGURATION
 
 // CPU settings
-#define TARGET_CPU m328p
-#define F_CPU 16000000
+#define TARGET_CPU m1284p
+#define F_CPU 16000000UL
 #define FREQUENCY_CORRECTION 0
 
 // ADC settings
 #define OPEN_SQUELCH true
 #define ADC_REFERENCE REF_3V3
-// OR
-//#define ADC_REFERENCE REF_5V
 
 // Sampling & timer setup
-#define CONFIG_AFSK_DAC_SAMPLERATE 9600
-
-// Serial protocol settings
-#define SERIAL_PROTOCOL PROTOCOL_KISS
-// OR
-//#define SERIAL_PROTOCOL PROTOCOL_SIMPLE_SERIAL
-
-// AX25 settings
-#if SERIAL_PROTOCOL == PROTOCOL_SIMPLE_SERIAL
-    #define CUSTOM_FRAME_SIZE 330
-#endif
+#define CONFIG_SAMPLERATE 19200UL
+//#define CONFIG_SAMPLERATE 9600
 
 // Serial settings
-#define BAUD 9600
+#define BAUD 115200
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
 
 // Port settings
-#if TARGET_CPU == m328p
-    #define DAC_PORT PORTD
-    #define DAC_DDR  DDRD
-    #define LED_PORT PORTB
-    #define LED_DDR  DDRB
-    #define ADC_PORT PORTC
-    #define ADC_DDR  DDRC
+#if TARGET_CPU == m1284p
+    #define ADC_PORT PORTA
+    #define ADC_DDR  DDRA
+    #define DAC_PORT PORTB
+    #define DAC_DDR  DDRB
+    #define LED_PORT PORTC
+    #define LED_DDR  DDRC
 #endif
 
 #endif
