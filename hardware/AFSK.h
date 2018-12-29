@@ -120,7 +120,7 @@ typedef struct Afsk
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells
 
-    uint32_t sampledBits;                    // Bits sampled by the demodulator (at ADC speed)
+    uint8_t sampledBits;                    // Bits sampled by the demodulator (at ADC speed)
     int8_t currentPhase;                    // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate
 
