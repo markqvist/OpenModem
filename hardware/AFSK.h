@@ -35,9 +35,11 @@ inline static uint8_t sinSample(uint16_t i) {
 #define BITS_DIFFER(bits1, bits2) (((bits1)^(bits2)) & 0x01)
 #define TRANSITION_FOUND(bits) BITS_DIFFER((bits), (bits) >> 1)
 
-// TODO: Maybe expand number of bits looked at here:
+// TODO: Maybe revert to only looking at two samples
 #define DUAL_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x03) == 0x03)
-#define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
+#define QUAD_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x0F) == 0x0F)
+#define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
+// #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
 
 #define CPU_FREQ F_CPU
 
@@ -53,16 +55,19 @@ inline static uint8_t sinSample(uint16_t i) {
 #define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
 #define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
 
-// TODO: Calculate based on sample rate
-#define PHASE_INC    SAMPLESPERBIT/8                   // Nudge by an eigth of a sample each adjustment
-#define PHASE_BITS   8 // How much to increment phase counter each sample
+// TODO: Calculate based on sample rate [Done?]
+#define PHASE_BITS   8                              // 8    // Sub-sample phase counter resolution
+#define PHASE_INC    1                              // 1    // Nudge by above resolution for each adjustment
 
-#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Resolution of our phase counter
-#define PHASE_THRESHOLD  (PHASE_MAX / 2)            // Target transition point of our phase window
+#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // 128  // Size of our phase counter
+// TODO: Test which target is best in real world
+#define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
+//#define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
 
 #define DCD_TIMEOUT_SAMPLES CONFIG_SAMPLERATE/100
 #define DCD_MIN_COUNT CONFIG_SAMPLERATE/1600
-                       
+         
+// TODO: Revamp filtering              
 #if BITRATE == 1200
     #define FILTER_CUTOFF 600
     #define MARK_FREQ  1200
@@ -120,8 +125,12 @@ typedef struct Afsk
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells
 
-    uint8_t sampledBits;                    // Bits sampled by the demodulator (at ADC speed)
-    int8_t currentPhase;                    // Current phase of the demodulator
+    #if SAMPLESPERBIT < 17
+        uint16_t sampledBits;               // Bits sampled by the demodulator (at ADC speed)
+    #else
+        #error Not enough space in sampledBits variable!
+    #endif
+    int16_t currentPhase;                    // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate
 
     volatile int status;                    // Status of the modem, 0 means OK

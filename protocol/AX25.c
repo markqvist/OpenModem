@@ -31,7 +31,7 @@ void ax25_poll(AX25Ctx *ctx) {
     while ((c = fgetc(ctx->ch)) != EOF) {
         if (!ctx->escape && c == HDLC_FLAG) {
             if (ctx->frame_len >= AX25_MIN_FRAME_LEN) {
-                if (ctx->crc_in == AX25_CRC_CORRECT) {
+                if (ctx->crc_in == AX25_CRC_CORRECT || CONFIG_PASSALL) {
                     #if OPEN_SQUELCH == true
                         LED_RX_ON();
                     #endif

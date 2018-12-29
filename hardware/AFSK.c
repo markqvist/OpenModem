@@ -375,54 +375,53 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
     afsk->iirX[0] = afsk->iirX[1];
 
-    #if FILTER_CUTOFF == 600
-        afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 2;
-        // The above is a simplification of:
-        // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 3.558147322;
-    #elif FILTER_CUTOFF == 800
-        afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 2;
-        // The above is a simplification of:
-        // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 2.899043379;
-    #elif FILTER_CUTOFF == 1200
-        afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 1;
-        // The above is a simplification of:
-        // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 2.228465666;
-    #elif FILTER_CUTOFF == 1600
-        afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 1;
-        // The above is a simplification of:
-        // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 1.881349100;
+    #if CONFIG_SAMPLERATE == 9600
+        #if FILTER_CUTOFF == 600
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 2;
+            // The above is a simplification of:
+            // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 3.558147322;        
+        #else
+            #error Unsupported filter cutoff!
+        #endif
+    #elif CONFIG_SAMPLERATE == 19200
+        #if FILTER_CUTOFF == 600
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 6;
+        #else
+            #error Unsupported filter cutoff!
+        #endif
     #else
-        #error Unsupported filter cutoff!
+        #error Unsupported samplerate!
     #endif
 
     afsk->iirY[0] = afsk->iirY[1];
     
-    #if FILTER_CUTOFF == 600
-        afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] >> 1);
-        // The above is a simplification of a first-order 600Hz chebyshev filter:
-        // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * 0.4379097269);
-    #elif FILTER_CUTOFF == 800
-        afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 3);
-        // The above is a simplification of a first-order 800Hz chebyshev filter:
-        // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * 0.3101172565);
-    #elif FILTER_CUTOFF == 1200
-        afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 10);
-        // The above is a simplification of a first-order 1200Hz chebyshev filter:
-        // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * 0.1025215106);
-    #elif FILTER_CUTOFF == 1600
-        afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + -1*(afsk->iirY[0] / 17);
-        // The above is a simplification of a first-order 1600Hz chebyshev filter:
-        // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * -0.0630669239);
+    #if CONFIG_SAMPLERATE == 9600
+        #if FILTER_CUTOFF == 600
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] >> 1);
+            // The above is a simplification of:
+            // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * 0.4379097269);
+        #else
+            #error Unsupported filter cutoff!
+        #endif
+    #elif CONFIG_SAMPLERATE == 19200
+        #if FILTER_CUTOFF == 600
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 2);            
+        #else
+            #error Unsupported filter cutoff!
+        #endif
     #else
-        #error Unsupported filter cutoff!
+        #error Unsupported samplerate!
     #endif
-
+    
+    //int8_t freq_disc = (int8_t)fifo_pop(&afsk->delayFifo) * currentSample;
 
     // We put the sampled bit in a delay-line:
     // First we bitshift everything 1 left
     afsk->sampledBits <<= 1;
+
     // And then add the sampled bit to our delay line
     afsk->sampledBits |= (afsk->iirY[1] > 0) ? 0 : 1;
+    //afsk->sampledBits |= (freq_disc > 0) ? 0 : 1;
 
     // Put the current raw sample in the delay FIFO
     fifo_push(&afsk->delayFifo, currentSample);
@@ -489,6 +488,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
         // the last 3 sampled bits. If there is two or
         // more 1's, we will assume that the transmitter
         // sent us a one, otherwise we assume a zero
+        
         uint8_t bits = afsk->sampledBits & 0x07;
         if (bits == 0x07 || // 111
             bits == 0x06 || // 110
@@ -498,15 +498,17 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             afsk->actualBits |= 1;
         }
 
-         //// Alternative using five bits ////////////////
-         // uint8_t bits = afsk->sampledBits & 0x0f;
-         // uint8_t c = 0;
-         // c += bits & BV(1);
-         // c += bits & BV(2);
-         // c += bits & BV(3);
-         // c += bits & BV(4);
-         // c += bits & BV(5);
-         // if (c >= 3) afsk->actualBits |= 1;
+
+        //// Alternative using six bits ////////////////
+        // uint8_t bits = afsk->sampledBits & 0x3F;
+        // uint8_t c = 0;
+        // c += bits & _BV(0);
+        // c += bits & _BV(1);
+        // c += bits & _BV(2);
+        // c += bits & _BV(3);
+        // c += bits & _BV(4);
+        // c += bits & _BV(5);
+        // if (c >= 3) afsk->actualBits |= 1;
         /////////////////////////////////////////////////
 
         // Now we can pass the actual bit to the HDLC parser.
