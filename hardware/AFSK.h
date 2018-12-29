@@ -39,8 +39,8 @@ inline static uint8_t sinSample(uint16_t i) {
 
 #define CPU_FREQ F_CPU
 
-#define CONFIG_AFSK_RX_BUFLEN 64
-#define CONFIG_AFSK_TX_BUFLEN 64   
+#define CONFIG_AFSK_RX_BUFLEN CONFIG_SAMPLERATE/150
+#define CONFIG_AFSK_TX_BUFLEN CONFIG_SAMPLERATE/150
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_TXWAIT    0UL
 #define CONFIG_AFSK_PREAMBLE_LEN 350UL
@@ -50,32 +50,24 @@ inline static uint8_t sinSample(uint16_t i) {
 #define BITRATE    1200
 #define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
 #define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
-#define PHASE_INC    1                              // Nudge by an eigth of a sample each adjustment
 
-#define DCD_MIN_COUNT 6
-#define DCD_TIMEOUT_SAMPLES 96
-                       
-#if BITRATE == 960
-    #define FILTER_CUTOFF 600
-    #define MARK_FREQ  960
-    #define SPACE_FREQ 1600
-    #define PHASE_BITS   10                         // How much to increment phase counter each sample
-#elif BITRATE == 1200
-    #define FILTER_CUTOFF 600
-    #define MARK_FREQ  1200
-    #define SPACE_FREQ 2200
-    #define PHASE_BITS   8
-#elif BITRATE == 1600
-    #define FILTER_CUTOFF 800
-    #define MARK_FREQ  1600
-    #define SPACE_FREQ 2600
-    #define PHASE_BITS   8
-#else
-    #error Unsupported bitrate!
-#endif
+// TODO: Calculate based on sample rate
+#define PHASE_INC    SAMPLESPERBIT/8                   // Nudge by an eigth of a sample each adjustment
+#define PHASE_BITS   8 // How much to increment phase counter each sample
 
 #define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Resolution of our phase counter = 64
 #define PHASE_THRESHOLD  (PHASE_MAX / 2)            // Target transition point of our phase window
+
+#define DCD_TIMEOUT_SAMPLES CONFIG_SAMPLERATE/100
+#define DCD_MIN_COUNT CONFIG_SAMPLERATE/1600
+                       
+#if BITRATE == 1200
+    #define FILTER_CUTOFF 600
+    #define MARK_FREQ  1200
+    #define SPACE_FREQ 2200
+#else
+    #error Unsupported bitrate!
+#endif
 
 typedef struct Hdlc
 {
@@ -146,7 +138,7 @@ typedef struct Afsk
 #define AFSK_DAC_INIT()        do { DAC_DDR |= 0xFF; } while (0)
 
 // Here's some macros for controlling the RX/TX LEDs
-// THE _INIT() functions writes to the DDRB register
+// THE _INIT() functions writes to the DDR registers
 // to configure the pins as output pins, and the _ON()
 // and _OFF() functions writes to the PORT registers
 // to turn the pins on or off.

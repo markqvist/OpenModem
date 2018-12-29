@@ -256,7 +256,7 @@ static bool hdlcParse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
     // In this comparison we also detect when no transmission
     // (or silence) is taking place, and the demodulator
     // returns an endless stream of zeroes. Due to the NRZ-S
-    // coding, the actual bits send to this function will
+    // coding, the actual bits sent to this function will
     // be an endless stream of ones, which this AND operation
     // will also detect.
     if ((hdlc->demodulatedBits & HDLC_RESET) == HDLC_RESET) {
@@ -549,13 +549,18 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
+
+    //DAC_PORT ^= 0xFF;
+    //DAC_PORT = ADCH;
+
     AFSK_adc_isr(AFSK_modem, (ADCH - 128));
-    
+
     if (hw_afsk_dac_isr) {
         DAC_PORT = AFSK_dac_isr(AFSK_modem);
         LED_TX_ON();
     } else {
-        DAC_PORT = 128;
+        DAC_PORT = 127;
+        LED_TX_OFF();
     }
 
     ++_clock;

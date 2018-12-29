@@ -14,12 +14,16 @@
 
 // Sampling & timer setup
 #define CONFIG_SAMPLERATE 19200UL
+//#define CONFIG_SAMPLERATE 19200UL
 //#define CONFIG_SAMPLERATE 9600
 
 // Serial settings
 #define BAUD 115200
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
+
+// CSMA Settings
+#define CONFIG_CSMA_P 255
 
 // Port settings
 #if TARGET_CPU == m1284p

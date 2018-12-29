@@ -18,7 +18,7 @@ unsigned long custom_preamble = CONFIG_AFSK_PREAMBLE_LEN;
 unsigned long custom_tail = CONFIG_AFSK_TRAILER_LEN;
 
 unsigned long slotTime = 200;
-uint8_t p = 63;
+uint8_t p = CONFIG_CSMA_P;
 
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     ax25ctx = ax25;
@@ -55,7 +55,6 @@ void kiss_csma(AX25Ctx *ctx, uint8_t *buf, size_t len) {
         }
     }
     while (!sent) {
-        //puts("Waiting in CSMA");
         if(!channel->hdlc.dcd) {
             uint8_t tp = rand() & 0xFF;
             if (tp < p) {
