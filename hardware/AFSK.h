@@ -33,9 +33,11 @@ inline static uint8_t sinSample(uint16_t i) {
 
 #define SWITCH_TONE(inc)  (((inc) == MARK_INC) ? SPACE_INC : MARK_INC)
 #define BITS_DIFFER(bits1, bits2) (((bits1)^(bits2)) & 0x01)
+#define TRANSITION_FOUND(bits) BITS_DIFFER((bits), (bits) >> 1)
+
+// TODO: Maybe expand number of bits looked at here:
 #define DUAL_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x03) == 0x03)
 #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
-#define TRANSITION_FOUND(bits) BITS_DIFFER((bits), (bits) >> 1)
 
 #define CPU_FREQ F_CPU
 
@@ -55,7 +57,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define PHASE_INC    SAMPLESPERBIT/8                   // Nudge by an eigth of a sample each adjustment
 #define PHASE_BITS   8 // How much to increment phase counter each sample
 
-#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Resolution of our phase counter = 64
+#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Resolution of our phase counter
 #define PHASE_THRESHOLD  (PHASE_MAX / 2)            // Target transition point of our phase window
 
 #define DCD_TIMEOUT_SAMPLES CONFIG_SAMPLERATE/100
@@ -118,7 +120,7 @@ typedef struct Afsk
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells
 
-    uint8_t sampledBits;                    // Bits sampled by the demodulator (at ADC speed)
+    uint16_t sampledBits;                    // Bits sampled by the demodulator (at ADC speed)
     int8_t currentPhase;                    // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate
 
