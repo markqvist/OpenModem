@@ -11,7 +11,7 @@
 #include "protocol/HDLC.h"
 
 #define SIN_LEN 512
-static const uint8_t sin_table[] PROGMEM =
+static const uint8_t sine_table[] =
 {
     128, 129, 131, 132, 134, 135, 137, 138, 140, 142, 143, 145, 146, 148, 149, 151,
     152, 154, 155, 157, 158, 160, 162, 163, 165, 166, 167, 169, 170, 172, 173, 175,
@@ -26,7 +26,7 @@ static const uint8_t sin_table[] PROGMEM =
 inline static uint8_t sinSample(uint16_t i) {
     uint16_t newI = i % (SIN_LEN/2);
     newI = (newI >= (SIN_LEN/4)) ? (SIN_LEN/2 - newI -1) : newI;
-    uint8_t sine = pgm_read_byte(&sin_table[newI]);
+    uint8_t sine = sine_table[newI];
     return (i >= (SIN_LEN/2)) ? (255 - sine) : sine;
 }
 
@@ -34,12 +34,8 @@ inline static uint8_t sinSample(uint16_t i) {
 #define SWITCH_TONE(inc)  (((inc) == MARK_INC) ? SPACE_INC : MARK_INC)
 #define BITS_DIFFER(bits1, bits2) (((bits1)^(bits2)) & 0x01)
 #define TRANSITION_FOUND(bits) BITS_DIFFER((bits), (bits) >> 1)
-
-// TODO: Maybe revert to only looking at two samples
 #define DUAL_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x03) == 0x03)
 #define QUAD_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x0F) == 0x0F)
-#define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
-// #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
 
 #define CPU_FREQ F_CPU
 
@@ -47,22 +43,37 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TX_BUFLEN CONFIG_SAMPLERATE/150
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_TXWAIT    0UL
-#define CONFIG_AFSK_PREAMBLE_LEN 350UL
-#define CONFIG_AFSK_TRAILER_LEN 50UL
+#define CONFIG_AFSK_PREAMBLE_LEN 450UL
+#define CONFIG_AFSK_TRAILER_LEN 10UL
 #define BIT_STUFF_LEN 5
 
 #define BITRATE    1200
 #define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
 #define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
 
-// TODO: Calculate based on sample rate [Done?]
-#define PHASE_BITS   8                              // 8    // Sub-sample phase counter resolution
-#define PHASE_INC    1                              // 1    // Nudge by above resolution for each adjustment
+// TODO: Maybe revert to only looking at two samples
 
-#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // 128  // Size of our phase counter
+#if BITRATE == 1200
+    #define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
+#elif BITRATE == 2400
+    #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
+#endif
+
+// TODO: Calculate based on sample rate [Done?]
+#define PHASE_BITS   8                              // Sub-sample phase counter resolution
+#define PHASE_INC    1                              // Nudge by above resolution for each adjustment
+
+#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
+
 // TODO: Test which target is best in real world
-#define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
-//#define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
+// For 1200, this seems a little better
+#if BITRATE == 1200
+    #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
+    //#define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
+#elif BITRATE == 2400
+    #define PHASE_THRESHOLD  (PHASE_MAX / 2)+14  // Target transition point of our phase window
+#endif
+
 
 #define DCD_TIMEOUT_SAMPLES CONFIG_SAMPLERATE/100
 #define DCD_MIN_COUNT CONFIG_SAMPLERATE/1600
@@ -72,6 +83,16 @@ inline static uint8_t sinSample(uint16_t i) {
     #define FILTER_CUTOFF 600
     #define MARK_FREQ  1200
     #define SPACE_FREQ 2200
+#elif BITRATE == 2400
+    #define FILTER_CUTOFF 772
+    // #define MARK_FREQ  2165
+    // #define SPACE_FREQ 3970
+    #define MARK_FREQ  2200
+    #define SPACE_FREQ 4000
+#elif BITRATE == 300
+    #define FILTER_CUTOFF 600
+    #define MARK_FREQ  1600
+    #define SPACE_FREQ 1800
 #else
     #error Unsupported bitrate!
 #endif
@@ -117,7 +138,12 @@ typedef struct Afsk
 
     // Demodulation values
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
-    int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+    #if BITRATE == 1200
+        int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        //int8_t delayBuf[3 + 1]; // Actual data storage for said FIFO
+    #elif BITRATE == 2400
+        int8_t delayBuf[7 + 1]; // Actual data storage for said FIFO
+    #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data
     uint8_t rxBuf[CONFIG_AFSK_RX_BUFLEN];   // Actual data storage for said FIFO
@@ -128,7 +154,9 @@ typedef struct Afsk
     #if SAMPLESPERBIT < 17
         uint16_t sampledBits;               // Bits sampled by the demodulator (at ADC speed)
     #else
-        #error Not enough space in sampledBits variable!
+        // TODO: Enable error and set up correct size buffers
+        uint16_t sampledBits;
+        //#error Not enough space in sampledBits variable!
     #endif
     int16_t currentPhase;                    // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate

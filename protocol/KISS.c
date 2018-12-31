@@ -27,7 +27,12 @@ void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     FLOWCONTROL = false;
 }
 
+// TODO: Revert to actual data
+size_t decodes = 0;
 void kiss_messageCallback(AX25Ctx *ctx) {
+    decodes++;
+    printf("%d\r\n", decodes);
+    /*
     fputc(FEND, &serial->uart0);
     fputc(0x00, &serial->uart0);
     for (unsigned i = 0; i < ctx->frame_len-2; i++) {
@@ -42,7 +47,7 @@ void kiss_messageCallback(AX25Ctx *ctx) {
             fputc(b, &serial->uart0);
         }
     }
-    fputc(FEND, &serial->uart0);
+    fputc(FEND, &serial->uart0);*/
 }
 
 void kiss_csma(AX25Ctx *ctx, uint8_t *buf, size_t len) {

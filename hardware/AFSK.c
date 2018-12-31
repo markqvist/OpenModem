@@ -376,44 +376,67 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
     afsk->iirX[0] = afsk->iirX[1];
 
     #if CONFIG_SAMPLERATE == 9600
-        #if FILTER_CUTOFF == 600
-            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) >> 2;
-            // The above is a simplification of:
-            // afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 3.558147322;        
-        #else
-            #error Unsupported filter cutoff!
-        #endif
-    #elif CONFIG_SAMPLERATE == 19200
-        #if FILTER_CUTOFF == 600
-            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / 6;
-        #else
-            #error Unsupported filter cutoff!
-        #endif
-    #else
-        #error Unsupported samplerate!
-    #endif
+        #if FILTER_CUTOFF == 500
+            #define IIR_GAIN 4 // Really 4.082041675
+            #define IIR_POLE 2 // Really Y[0] * 0.5100490981
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 2);
 
-    afsk->iirY[0] = afsk->iirY[1];
-    
-    #if CONFIG_SAMPLERATE == 9600
-        #if FILTER_CUTOFF == 600
-            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] >> 1);
-            // The above is a simplification of:
-            // afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * 0.4379097269);
         #else
             #error Unsupported filter cutoff!
         #endif
+
     #elif CONFIG_SAMPLERATE == 19200
-        #if FILTER_CUTOFF == 600
-            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 2);            
+
+        #if FILTER_CUTOFF == 150
+            #define IIR_GAIN 2 // Really 2.172813446e
+            #define IIR_POLE 2 // Really Y[0] * 0.9079534415
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE); 
+
+        #elif FILTER_CUTOFF == 500
+            #define IIR_GAIN 7 // Really 5.006847792
+            #define IIR_POLE 2 // Really Y[0] * 0.6005470741
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE); 
+
+        #elif FILTER_CUTOFF == 600
+            #define IIR_GAIN 6 // Really 6.166411713
+            #define IIR_POLE 2 // Really Y[0] * 0.6756622663
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE); 
+
+        #elif FILTER_CUTOFF == 772
+            #define IIR_GAIN 5 // Really 5.006847792
+            #define IIR_POLE 2 // Really Y[0] * 0.6005470741
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);  
+
+        #elif FILTER_CUTOFF == 1000
+            #define IIR_GAIN 4 // Really 4.082041675
+            #define IIR_POLE 2 // Really Y[0] * 0.5100490981
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
+
+        #elif FILTER_CUTOFF == 1400
+            #define IIR_GAIN 3 // Really 3.182326364
+            #define IIR_POLE 3 // Really Y[0] * 0.3715289474
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);    
+
         #else
             #error Unsupported filter cutoff!
         #endif
     #else
-        #error Unsupported samplerate!
+        #error No filters defined for specified samplerate!
     #endif
-    
-    //int8_t freq_disc = (int8_t)fifo_pop(&afsk->delayFifo) * currentSample;
 
     // We put the sampled bit in a delay-line:
     // First we bitshift everything 1 left
@@ -551,16 +574,13 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
-
-    //DAC_PORT ^= 0xFF;
-    //DAC_PORT = ADCH;
-
-    AFSK_adc_isr(AFSK_modem, (ADCH - 128));
-
+    
     if (hw_afsk_dac_isr) {
         DAC_PORT = AFSK_dac_isr(AFSK_modem);
         LED_TX_ON();
     } else {
+        // TODO: Enable full duplex if possible
+        AFSK_adc_isr(AFSK_modem, (ADCH - 128));
         DAC_PORT = 127;
         LED_TX_OFF();
     }
@@ -569,6 +589,10 @@ ISR(ADC_vect) {
 
     /*
     // TODO: Remove these debug sample collection functions
+
+    //DAC_PORT ^= 0xFF;
+    //DAC_PORT = ADCH;
+
     if (capturedsamples == SAMPLES_TO_CAPTURE) {
         printf("--- Dumping samples ---");
         for (ticks_t i = 0; i < SAMPLES_TO_CAPTURE; i++) {

@@ -14,6 +14,7 @@
 
 // Sampling & timer setup
 #define CONFIG_SAMPLERATE 19200UL
+//#define CONFIG_SAMPLERATE 9600UL
 
 // Serial settings
 #define BAUD 115200
