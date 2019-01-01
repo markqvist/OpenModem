@@ -7,7 +7,6 @@
 #include <stdio.h>
 #include <avr/pgmspace.h>
 #include "util/FIFO.h"
-#include "util/time.h"
 #include "protocol/HDLC.h"
 
 #define SIN_LEN 512
@@ -43,18 +42,29 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TX_BUFLEN CONFIG_SAMPLERATE/150
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_TXWAIT    0UL
-#define CONFIG_AFSK_PREAMBLE_LEN 450UL
-#define CONFIG_AFSK_TRAILER_LEN 10UL
+#define CONFIG_AFSK_PREAMBLE_LEN 150UL
+#define CONFIG_AFSK_TRAILER_LEN 25UL
 #define BIT_STUFF_LEN 5
 
-#define BITRATE    1200
+#define BITRATE    2400
+
+#if BITRATE == 1200
+    #define CONFIG_SAMPLERATE 9600UL
+#elif BITRATE == 2400
+    #define CONFIG_SAMPLERATE 19200UL
+#endif
+
 #define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
 #define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
 
 // TODO: Maybe revert to only looking at two samples
 
 #if BITRATE == 1200
-    #define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
+    #if CONFIG_SAMPLERATE == 19200
+        #define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
+    #elif CONFIG_SAMPLERATE == 9600
+        #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
+    #endif
 #elif BITRATE == 2400
     #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
 #endif
@@ -68,10 +78,13 @@ inline static uint8_t sinSample(uint16_t i) {
 // TODO: Test which target is best in real world
 // For 1200, this seems a little better
 #if BITRATE == 1200
-    #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
-    //#define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
+    #if CONFIG_SAMPLERATE == 19200
+        #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
+    #elif CONFIG_SAMPLERATE == 9600
+        #define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
+    #endif
 #elif BITRATE == 2400
-    #define PHASE_THRESHOLD  (PHASE_MAX / 2)+14  // Target transition point of our phase window
+    #define PHASE_THRESHOLD  (PHASE_MAX / 2)  // Target transition point of our phase window
 #endif
 
 
@@ -80,15 +93,17 @@ inline static uint8_t sinSample(uint16_t i) {
          
 // TODO: Revamp filtering              
 #if BITRATE == 1200
-    #define FILTER_CUTOFF 600
+    #define FILTER_CUTOFF 500
     #define MARK_FREQ  1200
     #define SPACE_FREQ 2200
 #elif BITRATE == 2400
-    #define FILTER_CUTOFF 772
-    // #define MARK_FREQ  2165
-    // #define SPACE_FREQ 3970
-    #define MARK_FREQ  2200
-    #define SPACE_FREQ 4000
+    // TODO: Determine best filter cutoff
+    // #define FILTER_CUTOFF 772
+    #define FILTER_CUTOFF 1000
+    #define MARK_FREQ  2165
+    #define SPACE_FREQ 3970
+    //#define MARK_FREQ  2200
+    //#define SPACE_FREQ 4000
 #elif BITRATE == 300
     #define FILTER_CUTOFF 600
     #define MARK_FREQ  1600
@@ -139,8 +154,11 @@ typedef struct Afsk
     // Demodulation values
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
     #if BITRATE == 1200
-        int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
-        //int8_t delayBuf[3 + 1]; // Actual data storage for said FIFO
+        #if CONFIG_SAMPLERATE == 19200
+            int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        #elif CONFIG_SAMPLERATE == 9600
+            int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        #endif
     #elif BITRATE == 2400
         int8_t delayBuf[7 + 1]; // Actual data storage for said FIFO
     #endif

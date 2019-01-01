@@ -2,10 +2,11 @@
 #include "AFSK.h"
 #include "util/time.h"
 
-// TODO: Remove testing vars
+// TODO: Remove testing vars ////
 #define SAMPLES_TO_CAPTURE 128
 ticks_t capturedsamples = 0;
 uint8_t samplebuf[SAMPLES_TO_CAPTURE];
+/////////////////////////////////
 
 extern volatile ticks_t _clock;
 extern unsigned long custom_preamble;
@@ -58,7 +59,7 @@ void AFSK_hw_init(void) {
                 _BV(ADIE) |     // ADC Interrupt Enable
                 _BV(ADPS0)|
                 _BV(ADPS2);     // Set ADC prescaler bits to 0b101 = 32
-                                // At 16MHz, this gives an ADC clock of 500 KHz
+                                // At 20MHz, this gives an ADC clock of 625 KHz
 
     // Run DAC initialisation
     AFSK_DAC_INIT();
@@ -388,7 +389,6 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
         #endif
 
     #elif CONFIG_SAMPLERATE == 19200
-
         #if FILTER_CUTOFF == 150
             #define IIR_GAIN 2 // Really 2.172813446e
             #define IIR_POLE 2 // Really Y[0] * 0.9079534415
@@ -570,7 +570,6 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
     }
 
 }
-
 
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);

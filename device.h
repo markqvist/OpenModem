@@ -5,16 +5,12 @@
 
 // CPU settings
 #define TARGET_CPU m1284p
-#define F_CPU 16000000UL
+#define F_CPU 20000000UL
 #define FREQUENCY_CORRECTION 0
 
 // ADC settings
 #define OPEN_SQUELCH true
 #define ADC_REFERENCE REF_3V3
-
-// Sampling & timer setup
-#define CONFIG_SAMPLERATE 19200UL
-//#define CONFIG_SAMPLERATE 9600UL
 
 // Serial settings
 #define BAUD 115200

@@ -2,12 +2,12 @@
 #include <avr/io.h>
 
 #include "device.h"
-#include "util/FIFO.h"
-#include "util/time.h"
 #include "hardware/AFSK.h"
 #include "hardware/Serial.h"
 #include "protocol/AX25.h"
 #include "protocol/KISS.h"
+#include "util/time.h"
+#include "util/FIFO.h"
 
 Serial serial;
 Afsk modem;

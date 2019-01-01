@@ -2,7 +2,6 @@
 #define UTIL_TIME_H
 
 #include <util/atomic.h>
-#include "device.h"
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
 #define CLOCK_TICKS_PER_SEC CONFIG_SAMPLERATE
