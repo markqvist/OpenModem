@@ -154,6 +154,7 @@ typedef struct Afsk
     // Demodulation values
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
     #if BITRATE == 1200
+        // TODO: Clean this up
         #if CONFIG_SAMPLERATE == 19200
             int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
         #elif CONFIG_SAMPLERATE == 9600
