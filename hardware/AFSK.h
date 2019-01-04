@@ -46,7 +46,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TRAILER_LEN 25UL
 #define BIT_STUFF_LEN 5
 
-#define BITRATE    2400
+#define BITRATE 1200
 
 #if BITRATE == 1200
     #define CONFIG_SAMPLERATE 9600UL

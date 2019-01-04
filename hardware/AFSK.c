@@ -22,7 +22,6 @@ int afsk_putchar(char c, FILE *stream);
 
 // ADC and clock setup
 void AFSK_hw_init(void) {
-
     // Set Timer1 to normal operation
     TCCR1A = 0;
 

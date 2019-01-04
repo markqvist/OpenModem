@@ -8,9 +8,13 @@
 #define F_CPU 20000000UL
 #define FREQUENCY_CORRECTION 0
 
-// ADC settings
+// Voltage references
+// TODO: Determine best defaults
+#define CONFIG_ADC_REF 128
+#define CONFIG_DAC_REF 255
+
+// Demodulator settings
 #define OPEN_SQUELCH true
-#define ADC_REFERENCE REF_3V3
 
 // Serial settings
 #define BAUD 115200

@@ -2,6 +2,7 @@
 #include <avr/io.h>
 
 #include "device.h"
+#include "hardware/VREF.h"
 #include "hardware/AFSK.h"
 #include "hardware/Serial.h"
 #include "protocol/AX25.h"
@@ -25,6 +26,7 @@ void init(void) {
     stdout = &serial.uart0;
     stdin  = &serial.uart0;
 
+    VREF_init();
     AFSK_init(&modem);
     ax25_init(&AX25, &modem, &modem.fd, ax25_callback);
 
