@@ -4,8 +4,8 @@ uint8_t adcReference = CONFIG_ADC_REF;
 uint8_t dacReference = CONFIG_DAC_REF;
 
 void VREF_init(void) {
-    //DDRD |= _BV(7);
-    DDRD = 0xFF;
+    // Enable output for OC2A and OC2B (PD7 and PD6)
+    DDRD |= _BV(7) | _BV(6);
 
     TCCR2A = _BV(WGM20) |
              _BV(WGM21) |

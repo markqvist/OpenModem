@@ -38,8 +38,8 @@ inline static uint8_t sinSample(uint16_t i) {
 
 #define CPU_FREQ F_CPU
 
-#define CONFIG_AFSK_RX_BUFLEN CONFIG_SAMPLERATE/150
-#define CONFIG_AFSK_TX_BUFLEN CONFIG_SAMPLERATE/150
+#define CONFIG_AFSK_RX_BUFLEN CONFIG_ADC_SAMPLERATE/150
+#define CONFIG_AFSK_TX_BUFLEN CONFIG_ADC_SAMPLERATE/150
 #define CONFIG_AFSK_RXTIMEOUT 0
 #define CONFIG_AFSK_TXWAIT    0UL
 #define CONFIG_AFSK_PREAMBLE_LEN 150UL
@@ -49,20 +49,24 @@ inline static uint8_t sinSample(uint16_t i) {
 #define BITRATE 1200
 
 #if BITRATE == 1200
-    #define CONFIG_SAMPLERATE 9600UL
+    #define CONFIG_ADC_SAMPLERATE 9600UL
+    #define CONFIG_DAC_SAMPLERATE 19200UL
 #elif BITRATE == 2400
-    #define CONFIG_SAMPLERATE 19200UL
+    #define CONFIG_ADC_SAMPLERATE 19200UL
+    #define CONFIG_DAC_SAMPLERATE 38400UL
 #endif
 
-#define SAMPLESPERBIT (CONFIG_SAMPLERATE / BITRATE)
-#define TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_SAMPLERATE) - 1)
+#define ADC_SAMPLESPERBIT (CONFIG_ADC_SAMPLERATE / BITRATE)
+#define ADC_TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_ADC_SAMPLERATE) - 1)
+
+#define DAC_SAMPLESPERBIT (CONFIG_DAC_SAMPLERATE / BITRATE)
+#define DAC_TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_DAC_SAMPLERATE) - 1)
 
 // TODO: Maybe revert to only looking at two samples
-
 #if BITRATE == 1200
-    #if CONFIG_SAMPLERATE == 19200
+    #if CONFIG_ADC_SAMPLERATE == 19200
         #define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
-    #elif CONFIG_SAMPLERATE == 9600
+    #elif CONFIG_ADC_SAMPLERATE == 9600
         #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
     #endif
 #elif BITRATE == 2400
@@ -73,14 +77,14 @@ inline static uint8_t sinSample(uint16_t i) {
 #define PHASE_BITS   8                              // Sub-sample phase counter resolution
 #define PHASE_INC    1                              // Nudge by above resolution for each adjustment
 
-#define PHASE_MAX    (SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
+#define PHASE_MAX    (ADC_SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
 
 // TODO: Test which target is best in real world
 // For 1200, this seems a little better
 #if BITRATE == 1200
-    #if CONFIG_SAMPLERATE == 19200
+    #if CONFIG_ADC_SAMPLERATE == 19200
         #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
-    #elif CONFIG_SAMPLERATE == 9600
+    #elif CONFIG_ADC_SAMPLERATE == 9600
         #define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
     #endif
 #elif BITRATE == 2400
@@ -88,8 +92,8 @@ inline static uint8_t sinSample(uint16_t i) {
 #endif
 
 
-#define DCD_TIMEOUT_SAMPLES CONFIG_SAMPLERATE/100
-#define DCD_MIN_COUNT CONFIG_SAMPLERATE/1600
+#define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
+#define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
          
 // TODO: Revamp filtering              
 #if BITRATE == 1200
@@ -155,10 +159,10 @@ typedef struct Afsk
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
     #if BITRATE == 1200
         // TODO: Clean this up
-        #if CONFIG_SAMPLERATE == 19200
-            int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
-        #elif CONFIG_SAMPLERATE == 9600
-            int8_t delayBuf[SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        #if CONFIG_ADC_SAMPLERATE == 19200
+            int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        #elif CONFIG_ADC_SAMPLERATE == 9600
+            int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
         #endif
     #elif BITRATE == 2400
         int8_t delayBuf[7 + 1]; // Actual data storage for said FIFO
@@ -170,7 +174,7 @@ typedef struct Afsk
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells
 
-    #if SAMPLESPERBIT < 17
+    #if ADC_SAMPLESPERBIT < 17
         uint16_t sampledBits;               // Bits sampled by the demodulator (at ADC speed)
     #else
         // TODO: Enable error and set up correct size buffers
@@ -185,15 +189,11 @@ typedef struct Afsk
 } Afsk;
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_SAMPLERATE))
-#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_SAMPLERATE))
+#define MARK_INC   (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)MARK_FREQ, CONFIG_DAC_SAMPLERATE))
+#define SPACE_INC  (uint16_t)(DIV_ROUND(SIN_LEN * (uint32_t)SPACE_FREQ, CONFIG_DAC_SAMPLERATE))
 
 #define AFSK_DAC_IRQ_START()   do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = true; } while (0)
 #define AFSK_DAC_IRQ_STOP()    do { extern bool hw_afsk_dac_isr; hw_afsk_dac_isr = false; } while (0)
-
-// DAC uses all 8 pins of one port, set all pins to
-// output direction
-#define AFSK_DAC_INIT()        do { DAC_DDR |= 0xFF; } while (0)
 
 // Here's some macros for controlling the RX/TX LEDs
 // THE _INIT() functions writes to the DDR registers
@@ -209,6 +209,8 @@ typedef struct Afsk
 #define LED_RX_OFF()  do { LED_PORT &= ~_BV(2); } while (0)
 
 void AFSK_init(Afsk *afsk);
+void AFSK_adc_init(void);
+void AFSK_dac_init(void);
 void AFSK_transmit(char *buffer, size_t size);
 void AFSK_poll(Afsk *afsk);
 

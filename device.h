@@ -22,6 +22,7 @@
 #define TX_MAXWAIT 2UL
 
 // CSMA Settings
+#define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx
 #define CONFIG_CSMA_P 255
 
 // Packet settings

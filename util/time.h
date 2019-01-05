@@ -4,7 +4,7 @@
 #include <util/atomic.h>
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define CLOCK_TICKS_PER_SEC CONFIG_SAMPLERATE
+#define CLOCK_TICKS_PER_SEC CONFIG_ADC_SAMPLERATE
 
 typedef int32_t ticks_t;
 typedef int32_t mtime_t;

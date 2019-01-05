@@ -22,6 +22,36 @@ int afsk_putchar(char c, FILE *stream);
 
 // ADC and clock setup
 void AFSK_hw_init(void) {
+    // Run ADC initialisation
+    AFSK_adc_init();
+
+    // Run DAC initialisation
+    AFSK_dac_init();
+
+    // Run LED initialisation
+    LED_TX_INIT();
+    LED_RX_INIT();
+}
+
+void AFSK_dac_init(void) {
+    // DAC uses all 8 pins of one port,
+    // so set all to output
+    DAC_DDR |= 0xFF;
+
+    // Set Timer3 to normal operation
+    TCCR3A = 0;
+    TCCR3B = _BV(CS10) |
+             _BV(WGM33)|
+             _BV(WGM32);
+
+    ICR3 = DAC_TICKS_BETWEEN_SAMPLES;
+    //OCR3A = DAC_TICKS_BETWEEN_SAMPLES;
+
+    TIMSK3 = _BV(ICIE3);
+
+}
+
+void AFSK_adc_init(void) {
     // Set Timer1 to normal operation
     TCCR1A = 0;
 
@@ -31,7 +61,7 @@ void AFSK_hw_init(void) {
 
     // Set ICR1 register to the amount of ticks needed between
     // each sample capture/synthesis
-    ICR1 = TICKS_BETWEEN_SAMPLES;
+    ICR1 = ADC_TICKS_BETWEEN_SAMPLES;
 
     // Set ADMUX register to use external AREF, channel ADC0
     // and left adjust result
@@ -60,12 +90,6 @@ void AFSK_hw_init(void) {
                 _BV(ADPS2);     // Set ADC prescaler bits to 0b101 = 32
                                 // At 20MHz, this gives an ADC clock of 625 KHz
 
-    // Run DAC initialisation
-    AFSK_DAC_INIT();
-
-    // Run LED initialisation
-    LED_TX_INIT();
-    LED_RX_INIT();
 }
 
 void AFSK_init(Afsk *afsk) {
@@ -82,7 +106,7 @@ void AFSK_init(Afsk *afsk) {
     fifo_init(&afsk->txFifo, afsk->txBuf, sizeof(afsk->txBuf));
 
     // Fill delay FIFO with zeroes
-    for (int i = 0; i<SAMPLESPERBIT / 2; i++) {
+    for (int i = 0; i<ADC_SAMPLESPERBIT / 2; i++) {
         fifo_push(&afsk->delayFifo, 0);
     }
 
@@ -185,7 +209,7 @@ uint8_t AFSK_dac_isr(Afsk *afsk) {
             afsk->txBit <<= 1;
         }
 
-        afsk->sampleIndex = SAMPLESPERBIT;
+        afsk->sampleIndex = DAC_SAMPLESPERBIT;
     }
 
     afsk->phaseAcc += afsk->phaseInc;
@@ -375,7 +399,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
     afsk->iirX[0] = afsk->iirX[1];
 
-    #if CONFIG_SAMPLERATE == 9600
+    #if CONFIG_ADC_SAMPLERATE == 9600
         #if FILTER_CUTOFF == 500
             #define IIR_GAIN 4 // Really 4.082041675
             #define IIR_POLE 2 // Really Y[0] * 0.5100490981
@@ -387,7 +411,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             #error Unsupported filter cutoff!
         #endif
 
-    #elif CONFIG_SAMPLERATE == 19200
+    #elif CONFIG_ADC_SAMPLERATE == 19200
         #if FILTER_CUTOFF == 150
             #define IIR_GAIN 2 // Really 2.172813446e
             #define IIR_POLE 2 // Really Y[0] * 0.9079534415
@@ -570,17 +594,21 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 }
 
-ISR(ADC_vect) {
-    TIFR1 = _BV(ICF1);
-    
+ISR(TIMER3_CAPT_vect) {
     if (hw_afsk_dac_isr) {
         DAC_PORT = AFSK_dac_isr(AFSK_modem);
         LED_TX_ON();
     } else {
-        // TODO: Enable full duplex if possible
-        AFSK_adc_isr(AFSK_modem, (ADCH - 128));
-        DAC_PORT = 127;
         LED_TX_OFF();
+        DAC_PORT = 127;
+    }
+}
+
+ISR(ADC_vect) {
+    TIFR1 = _BV(ICF1);
+
+    if (CONFIG_FULL_DUPLEX || !hw_afsk_dac_isr) {
+        AFSK_adc_isr(AFSK_modem, (ADCH - 128));
     }
 
     ++_clock;
