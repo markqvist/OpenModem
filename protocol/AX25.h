@@ -6,12 +6,9 @@
 #include "device.h"
 #include "hardware/AFSK.h"
 
-#define AX25_MIN_FRAME_LEN 18
-#ifndef CUSTOM_FRAME_SIZE
-    #define AX25_MAX_FRAME_LEN 792
-#else
-    #define AX25_MAX_FRAME_LEN CUSTOM_FRAME_SIZE
-#endif
+#define AX25_MIN_FRAME_LEN 1
+#define AX25_MAX_FRAME_LEN 1532
+
 
 #define AX25_CRC_CORRECT  0xF0B8
 

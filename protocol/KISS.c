@@ -110,7 +110,7 @@ void kiss_serialCallback(uint8_t sbyte) {
     } else if (IN_FRAME && frame_len < AX25_MAX_FRAME_LEN) {
         // Have a look at the command byte first
         if (frame_len == 0 && command == CMD_UNKNOWN) {
-            // MicroModem supports only one HDLC port, so we
+            // OpenModem supports only one HDLC port, so we
             // strip off the port nibble of the command byte
             sbyte = sbyte & 0x0F;
             command = sbyte;
