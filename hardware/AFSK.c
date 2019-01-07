@@ -399,13 +399,25 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
     afsk->iirX[0] = afsk->iirX[1];
 
-    #if CONFIG_ADC_SAMPLERATE == 9600
+    #if CONFIG_ADC_SAMPLERATE == 4800
+        #if FILTER_CUTOFF == 600
+            #define IIR_GAIN 2 // Really 2.228465666
+            #define IIR_POLE 10 // Really Y[0] * 0.1025215106
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
+
+        #else
+            #error Unsupported filter cutoff!
+        #endif
+
+    #elif CONFIG_ADC_SAMPLERATE == 9600
         #if FILTER_CUTOFF == 500
             #define IIR_GAIN 4 // Really 4.082041675
             #define IIR_POLE 2 // Really Y[0] * 0.5100490981
             afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
             afsk->iirY[0] = afsk->iirY[1];
-            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / 2);
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
 
         #else
             #error Unsupported filter cutoff!

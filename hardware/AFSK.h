@@ -46,9 +46,12 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TRAILER_LEN 25UL
 #define BIT_STUFF_LEN 5
 
-#define BITRATE 1200
+#define BITRATE 300
 
-#if BITRATE == 1200
+#if BITRATE == 300
+    #define CONFIG_ADC_SAMPLERATE 4800UL
+    #define CONFIG_DAC_SAMPLERATE 19200UL
+#elif BITRATE == 1200
     #define CONFIG_ADC_SAMPLERATE 9600UL
     #define CONFIG_DAC_SAMPLERATE 19200UL
 #elif BITRATE == 2400
@@ -63,7 +66,9 @@ inline static uint8_t sinSample(uint16_t i) {
 #define DAC_TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_DAC_SAMPLERATE) - 1)
 
 // TODO: Maybe revert to only looking at two samples
-#if BITRATE == 1200
+#if BITRATE == 300
+    #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
+#elif BITRATE == 1200
     #if CONFIG_ADC_SAMPLERATE == 19200
         #define SIGNAL_TRANSITIONED(bits) QUAD_XOR((bits), (bits) >> 4)
     #elif CONFIG_ADC_SAMPLERATE == 9600
@@ -81,7 +86,9 @@ inline static uint8_t sinSample(uint16_t i) {
 
 // TODO: Test which target is best in real world
 // For 1200, this seems a little better
-#if BITRATE == 1200
+#if BITRATE == 300
+    #define PHASE_THRESHOLD  (PHASE_MAX / 2)
+#elif BITRATE == 1200
     #if CONFIG_ADC_SAMPLERATE == 19200
         #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
     #elif CONFIG_ADC_SAMPLERATE == 9600
@@ -158,14 +165,11 @@ typedef struct Afsk
     // Demodulation values
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
     #if BITRATE == 1200
-        // TODO: Clean this up
-        #if CONFIG_ADC_SAMPLERATE == 19200
-            int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
-        #elif CONFIG_ADC_SAMPLERATE == 9600
-            int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
-        #endif
+        int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
     #elif BITRATE == 2400
-        int8_t delayBuf[7 + 1]; // Actual data storage for said FIFO
+        int8_t delayBuf[7 + 1];
+    #elif BITRATE == 300
+        int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1];
     #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data
@@ -177,9 +181,7 @@ typedef struct Afsk
     #if ADC_SAMPLESPERBIT < 17
         uint16_t sampledBits;               // Bits sampled by the demodulator (at ADC speed)
     #else
-        // TODO: Enable error and set up correct size buffers
-        uint16_t sampledBits;
-        //#error Not enough space in sampledBits variable!
+        #error Not enough space in sampledBits variable!
     #endif
     int16_t currentPhase;                    // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate
