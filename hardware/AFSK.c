@@ -149,14 +149,6 @@ int afsk_getchar(FILE *stream) {
     }
 }
 
-void AFSK_transmit(char *buffer, size_t size) {
-    fifo_flush(&AFSK_modem->txFifo);
-    int i = 0;
-    while (size--) {
-        afsk_putchar(buffer[i++], NULL);
-    }
-}
-
 uint8_t AFSK_dac_isr(Afsk *afsk) {
     if (afsk->sampleIndex == 0) {
         if (afsk->txBit == 0) {

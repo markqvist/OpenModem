@@ -65,8 +65,7 @@ void ax25_poll(AX25Ctx *ctx) {
 
 }
 
-static void ax25_putchar(AX25Ctx *ctx, uint8_t c)
-{
+static void ax25_putchar(AX25Ctx *ctx, uint8_t c) {
     if (c == HDLC_FLAG || c == HDLC_RESET || c == AX25_ESC) fputc(AX25_ESC, ctx->ch);
     ctx->crc_out = update_crc_ccit(c, ctx->crc_out);
     fputc(c, ctx->ch);
@@ -88,6 +87,13 @@ void ax25_sendRaw(AX25Ctx *ctx, void *_buf, size_t len) {
     ax25_putchar(ctx, crch);
 
     fputc(HDLC_FLAG, ctx->ch);
+    
+    #if BITRATE == 2400
+        // Insert an extra sync section between long packet segments
+        for (uint8_t i = 0; i < 8; i++) {
+            fputc(HDLC_FLAG, ctx->ch);
+        }
+    #endif
 
     ctx->ready_for_data = true;
 }

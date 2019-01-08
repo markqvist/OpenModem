@@ -4,6 +4,7 @@
 #include "device.h"
 #include "hardware/Serial.h"
 #include "util/FIFO16.h"
+#include "util/time.h"
 #include "KISS.h"
 
 uint8_t packet_queue[CONFIG_QUEUE_SIZE];
@@ -22,6 +23,7 @@ size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
+volatile ticks_t last_serial_read = 0;
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
@@ -50,6 +52,7 @@ void kiss_poll(void) {
     while (!fifo_isempty_locked(&serialFIFO)) {
         char sbyte = fifo_pop_locked(&serialFIFO);
         kiss_serialCallback(sbyte);
+        last_serial_read = timer_clock();
     }
 }
 
@@ -79,13 +82,26 @@ void kiss_messageCallback(AX25Ctx *ctx) {
 
 void kiss_csma(void) {
     if (queue_height > 0) {
-        if (!channel->hdlc.dcd) {
-            if (p == 255) {
-                kiss_flushQueue();
-            } else {
-                // TODO: Implement real CSMA
+        #if BITRATE == 2400
+            if (!channel->hdlc.dcd) {
+                ticks_t timeout = last_serial_read + ms_to_ticks(CONFIG_SERIAL_TIMEOUT_MS);
+                if (timer_clock() > timeout) {
+                    if (p == 255) {
+                        kiss_flushQueue();
+                    } else {
+                        // TODO: Implement real CSMA
+                    }
+                }
             }
-        }
+        #else
+            if (!channel->hdlc.dcd) {
+                if (p == 255) {
+                    kiss_flushQueue();
+                } else {
+                    // TODO: Implement real CSMA
+                }
+            }
+        #endif
     }
 }
 
@@ -117,7 +133,7 @@ void kiss_flushQueue(void) {
             size_t start = fifo16_pop_locked(&packet_starts);
             size_t length = fifo16_pop_locked(&packet_lengths);
 
-            kiss_poll();
+            //kiss_poll();
             for (size_t i = 0; i < length; i++) {
                 size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
                 tx_buffer[i] = packet_queue[pos];
@@ -133,7 +149,7 @@ void kiss_flushQueue(void) {
                 LED_RX_ON();
             }
         }
-        printf("Processed %d\r\n", processed);
+        //printf("Processed %d\r\n", processed);
 
         queue_height = 0;
         queued_bytes = 0;
@@ -163,7 +179,7 @@ void kiss_serialCallback(uint8_t sbyte) {
             fifo16_push_locked(&packet_lengths, l);
 
             current_packet_start = queue_cursor;
-            printf("Queue height %d\r\n", queue_height);
+            //printf("Queue height %d\r\n", queue_height);
         }
         
     } else if (sbyte == FEND) {

@@ -23,6 +23,7 @@
 #define CONFIG_QUEUE_SIZE 7500
 #define CONFIG_QUEUE_MAX_LENGTH 15
 #define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
+#define CONFIG_SERIAL_TIMEOUT_MS 10
 
 // CSMA Settings
 #define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx

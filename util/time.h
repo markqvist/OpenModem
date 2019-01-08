@@ -2,9 +2,9 @@
 #define UTIL_TIME_H
 
 #include <util/atomic.h>
+#include "hardware/AFSK.h"
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
-#define CLOCK_TICKS_PER_SEC CONFIG_ADC_SAMPLERATE
 
 typedef int32_t ticks_t;
 typedef int32_t mtime_t;

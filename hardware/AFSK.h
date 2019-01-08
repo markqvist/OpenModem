@@ -39,7 +39,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 
-#define BITRATE 2400
+#define BITRATE 1200
 
 #if BITRATE == 300
     #define CONFIG_ADC_SAMPLERATE 9600UL
@@ -49,16 +49,26 @@ inline static uint8_t sinSample(uint16_t i) {
     #define CONFIG_DAC_SAMPLERATE 19200UL
 #elif BITRATE == 2400
     #define CONFIG_ADC_SAMPLERATE 19200UL
-    #define CONFIG_DAC_SAMPLERATE 38400UL
+    #define CONFIG_DAC_SAMPLERATE 19200UL
 #endif
 
+#define CLOCK_TICKS_PER_SEC CONFIG_ADC_SAMPLERATE
 
 #define CONFIG_AFSK_RX_BUFLEN AX25_MAX_FRAME_LEN
 #define CONFIG_AFSK_TX_BUFLEN AX25_MAX_FRAME_LEN
 #define CONFIG_AFSK_RXTIMEOUT 0
 
-#define CONFIG_AFSK_PREAMBLE_LEN 150UL
-#define CONFIG_AFSK_TRAILER_LEN 25UL
+#if BITRATE == 300
+    #define CONFIG_AFSK_PREAMBLE_LEN 150UL
+    #define CONFIG_AFSK_TRAILER_LEN 10UL
+#elif BITRATE == 1200
+    #define CONFIG_AFSK_PREAMBLE_LEN 150UL
+    #define CONFIG_AFSK_TRAILER_LEN 10UL
+#elif BITRATE == 2400
+    #define CONFIG_AFSK_PREAMBLE_LEN 200UL
+    #define CONFIG_AFSK_TRAILER_LEN 25UL
+#endif
+
 #define BIT_STUFF_LEN 5
 
 #define ADC_SAMPLESPERBIT (CONFIG_ADC_SAMPLERATE / BITRATE)
@@ -230,7 +240,6 @@ typedef struct Afsk
 void AFSK_init(Afsk *afsk);
 void AFSK_adc_init(void);
 void AFSK_dac_init(void);
-void AFSK_transmit(char *buffer, size_t size);
 void AFSK_poll(Afsk *afsk);
 
 #endif
