@@ -38,13 +38,6 @@ inline static uint8_t sinSample(uint16_t i) {
 
 #define CPU_FREQ F_CPU
 
-#define CONFIG_AFSK_RX_BUFLEN CONFIG_ADC_SAMPLERATE/150
-#define CONFIG_AFSK_TX_BUFLEN CONFIG_ADC_SAMPLERATE/150
-#define CONFIG_AFSK_RXTIMEOUT 0
-#define CONFIG_AFSK_TXWAIT    0UL
-#define CONFIG_AFSK_PREAMBLE_LEN 150UL
-#define CONFIG_AFSK_TRAILER_LEN 25UL
-#define BIT_STUFF_LEN 5
 
 #define BITRATE 1200
 
@@ -58,6 +51,15 @@ inline static uint8_t sinSample(uint16_t i) {
     #define CONFIG_ADC_SAMPLERATE 19200UL
     #define CONFIG_DAC_SAMPLERATE 38400UL
 #endif
+
+
+#define CONFIG_AFSK_RX_BUFLEN CONFIG_ADC_SAMPLERATE/75
+#define CONFIG_AFSK_TX_BUFLEN CONFIG_ADC_SAMPLERATE/75
+#define CONFIG_AFSK_RXTIMEOUT 0
+
+#define CONFIG_AFSK_PREAMBLE_LEN 150UL
+#define CONFIG_AFSK_TRAILER_LEN 25UL
+#define BIT_STUFF_LEN 5
 
 #define ADC_SAMPLESPERBIT (CONFIG_ADC_SAMPLERATE / BITRATE)
 #define ADC_TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_ADC_SAMPLERATE) - 1)
@@ -169,9 +171,6 @@ typedef struct Afsk
 
     uint16_t silentSamples;                 // How many samples were completely silent
 
-    FIFOBuffer txFifo;                      // FIFO for transmit data
-    uint8_t txBuf[CONFIG_AFSK_TX_BUFLEN];   // Actual data storage for said FIFO
-
     volatile bool sending;                  // Set when modem is sending
     volatile bool sending_data;             // Set when modem is sending data
 
@@ -187,6 +186,9 @@ typedef struct Afsk
 
     FIFOBuffer rxFifo;                      // FIFO for received data
     uint8_t rxBuf[CONFIG_AFSK_RX_BUFLEN];   // Actual data storage for said FIFO
+
+    FIFOBuffer txFifo;                      // FIFO for transmit data
+    uint8_t txBuf[CONFIG_AFSK_TX_BUFLEN];   // Actual data storage for said FIFO
 
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells
