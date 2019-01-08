@@ -19,12 +19,16 @@
 #define CMD_TXTAIL 0x04
 #define CMD_FULLDUPLEX 0x05
 #define CMD_SETHARDWARE 0x06
+#define CMD_FLUSHQUEUE 0x07
+#define CMD_FLUSHQUEUE_DEBUG 0x08
 #define CMD_READY 0x0F
 #define CMD_RETURN 0xFF
 
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser);
-void kiss_csma(AX25Ctx *ctx, uint8_t *buf, size_t len);
 void kiss_messageCallback(AX25Ctx *ctx);
 void kiss_serialCallback(uint8_t sbyte);
+void kiss_flushQueue(void);
+void kiss_csma(void);
+void kiss_poll(void);
 
 #endif

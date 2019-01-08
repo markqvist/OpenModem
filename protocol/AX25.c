@@ -5,7 +5,8 @@
 #include "AX25.h"
 #include "protocol/HDLC.h"
 #include "util/CRC-CCIT.h"
-#include "../hardware/AFSK.h"
+#include "hardware/AFSK.h"
+#include "protocol/KISS.h"
 
 #define countof(a) sizeof(a)/sizeof(a[0])
 #define MIN(a,b) ({ typeof(a) _a = (a); typeof(b) _b = (b); ((typeof(_a))((_a < _b) ? _a : _b)); })
@@ -76,7 +77,10 @@ void ax25_sendRaw(AX25Ctx *ctx, void *_buf, size_t len) {
     ctx->crc_out = CRC_CCIT_INIT_VAL;
     fputc(HDLC_FLAG, ctx->ch);
     const uint8_t *buf = (const uint8_t *)_buf;
-    while (len--) ax25_putchar(ctx, *buf++);
+    while (len--) {
+        ax25_putchar(ctx, *buf++);
+        kiss_poll();
+    }
 
     uint8_t crcl = (ctx->crc_out & 0xff) ^ 0xff;
     uint8_t crch = (ctx->crc_out >> 8) ^ 0xff;

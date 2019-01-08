@@ -39,7 +39,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 
-#define BITRATE 1200
+#define BITRATE 2400
 
 #if BITRATE == 300
     #define CONFIG_ADC_SAMPLERATE 9600UL
@@ -53,8 +53,8 @@ inline static uint8_t sinSample(uint16_t i) {
 #endif
 
 
-#define CONFIG_AFSK_RX_BUFLEN CONFIG_ADC_SAMPLERATE/75
-#define CONFIG_AFSK_TX_BUFLEN CONFIG_ADC_SAMPLERATE/75
+#define CONFIG_AFSK_RX_BUFLEN AX25_MAX_FRAME_LEN
+#define CONFIG_AFSK_TX_BUFLEN AX25_MAX_FRAME_LEN
 #define CONFIG_AFSK_RXTIMEOUT 0
 
 #define CONFIG_AFSK_PREAMBLE_LEN 150UL

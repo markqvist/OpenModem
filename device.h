@@ -20,10 +20,16 @@
 #define BAUD 115200
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
+#define CONFIG_QUEUE_SIZE 7500
+#define CONFIG_QUEUE_MAX_LENGTH 15
+#define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
 
 // CSMA Settings
 #define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx
 #define CONFIG_CSMA_P 255
+
+#define AX25_MIN_FRAME_LEN 1
+#define AX25_MAX_FRAME_LEN 1532
 
 // Packet settings
 #define CONFIG_PASSALL false

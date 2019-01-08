@@ -2,16 +2,29 @@
 #include <string.h>
 
 #include "device.h"
+#include "hardware/Serial.h"
+#include "util/FIFO16.h"
 #include "KISS.h"
 
-static uint8_t serialBuffer[AX25_MAX_FRAME_LEN]; // Buffer for holding incoming serial data
+uint8_t packet_queue[CONFIG_QUEUE_SIZE];
+uint8_t tx_buffer[AX25_MAX_FRAME_LEN];
+volatile uint8_t queue_height = 0;
+volatile size_t queued_bytes = 0;
+volatile size_t queue_cursor = 0;
+volatile size_t current_packet_start = 0;
+
+FIFOBuffer16 packet_starts;
+size_t packet_starts_buf[CONFIG_QUEUE_MAX_LENGTH+1];
+
+FIFOBuffer16 packet_lengths;
+size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
+
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
-bool FLOWCONTROL;
 
 uint8_t command = CMD_UNKNOWN;
 unsigned long custom_preamble = CONFIG_AFSK_PREAMBLE_LEN;
@@ -24,7 +37,20 @@ void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     ax25ctx = ax25;
     serial = ser;
     channel = afsk;
-    FLOWCONTROL = false;
+
+    memset(packet_queue, 0, sizeof(packet_queue));
+    memset(packet_starts_buf, 0, sizeof(packet_starts));
+    memset(packet_lengths_buf, 0, sizeof(packet_lengths));
+
+    fifo16_init(&packet_starts, packet_starts_buf, sizeof(packet_starts_buf));
+    fifo16_init(&packet_lengths, packet_lengths_buf, sizeof(packet_lengths_buf));
+}
+
+void kiss_poll(void) {
+    while (!fifo_isempty_locked(&serialFIFO)) {
+        char sbyte = fifo_pop_locked(&serialFIFO);
+        kiss_serialCallback(sbyte);
+    }
 }
 
 // TODO: Remove debug functions
@@ -51,60 +77,95 @@ void kiss_messageCallback(AX25Ctx *ctx) {
     
 }
 
-void kiss_csma(AX25Ctx *ctx, uint8_t *buf, size_t len) {
-    bool sent = false;
-    // TODO: Determine if this is to be removed
-    // if (CONFIG_AFSK_TXWAIT > 0) {
-    //     ticks_t wait_start = timer_clock();
-    //     long wait_ticks = ms_to_ticks(CONFIG_AFSK_TXWAIT);
-    //     while (timer_clock() - wait_start < wait_ticks) {
-    //         cpu_relax();
-    //     }
-    // }
-    while (!sent) {
-        if(CONFIG_FULL_DUPLEX || !channel->hdlc.dcd) {
-            uint8_t tp = rand() & 0xFF;
-            if (tp < p) {
-                ax25_sendRaw(ctx, buf, len);
-                sent = true;
+void kiss_csma(void) {
+    if (queue_height > 0) {
+        if (!channel->hdlc.dcd) {
+            if (p == 255) {
+                kiss_flushQueue();
             } else {
-                ticks_t start = timer_clock();
-                long slot_ticks = ms_to_ticks(slotTime);
-                while (timer_clock() - start < slot_ticks) {
-                    cpu_relax();
-                }
-            }
-        } else {
-            while (!sent && channel->hdlc.receiving) {
-                // Continously poll the modem for data
-                // while waiting, so we don't overrun
-                // receive buffers
-                ax25_poll(ax25ctx);
-
-                if (channel->status != 0) {
-                    // If an overflow or other error
-                    // occurs, we'll back off and drop
-                    // this packet silently.
-                    channel->status = 0;
-                    sent = true;
-                }
+                // TODO: Implement real CSMA
             }
         }
     }
+}
 
-    if (FLOWCONTROL) {
-        while (!ctx->ready_for_data) { /* Wait */ }
-        fputc(FEND, &serial->uart0);
-        fputc(CMD_READY, &serial->uart0);
-        fputc(0x01, &serial->uart0);
-        fputc(FEND, &serial->uart0);
+// TODO: Remove this
+void kiss_flushQueueDebug(void) {
+    printf("Queue height %d\r\n", queue_height);
+    for (size_t n = 0; n < queue_height; n++) {
+        size_t start = fifo16_pop(&packet_starts);
+        size_t length = fifo16_pop(&packet_lengths);
+
+        printf("--- Packet %d, %d bytes ---\r\n", n+1, length);
+        for (size_t i = 0; i < length; i++) {
+            size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
+            printf("%02x", packet_queue[pos]);
+        }
+        printf("\r\n\r\n");
     }
+    queue_height = 0;
+    queued_bytes = 0;
+}
+
+volatile bool queue_flushing = false;
+void kiss_flushQueue(void) {
+    if (!queue_flushing) {
+        queue_flushing = true;
+
+        size_t processed = 0;
+        for (size_t n = 0; n < queue_height; n++) {
+            size_t start = fifo16_pop_locked(&packet_starts);
+            size_t length = fifo16_pop_locked(&packet_lengths);
+
+            kiss_poll();
+            for (size_t i = 0; i < length; i++) {
+                size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
+                tx_buffer[i] = packet_queue[pos];
+            }
+
+            ax25_sendRaw(ax25ctx, tx_buffer, length);
+            processed++;
+        }
+
+        if (processed < queue_height) {
+            while (true) {
+                LED_TX_ON();
+                LED_RX_ON();
+            }
+        }
+        printf("Processed %d\r\n", processed);
+
+        queue_height = 0;
+        queued_bytes = 0;
+        queue_flushing = false;
+    }
+}
+
+uint8_t kiss_queuedPackets(void) {
+    return 0;
+}
+
+bool kiss_queueIsFull(void) {
+    return false;
 }
 
 void kiss_serialCallback(uint8_t sbyte) {
     if (IN_FRAME && sbyte == FEND && command == CMD_DATA) {
         IN_FRAME = false;
-        kiss_csma(ax25ctx, serialBuffer, frame_len);
+
+        if (queue_height < CONFIG_QUEUE_MAX_LENGTH && queued_bytes < CONFIG_QUEUE_SIZE) {
+            queue_height++;
+            size_t s = current_packet_start;
+            size_t e = queue_cursor-1; if (e == -1) e = CONFIG_QUEUE_SIZE-1;
+            size_t l = (s < e) ? e - s + 1 : CONFIG_QUEUE_SIZE - s + e + 1;
+
+            fifo16_push_locked(&packet_starts, s);
+            fifo16_push_locked(&packet_lengths, l);
+
+            current_packet_start = queue_cursor;
+            printf("Queue height %d\r\n", queue_height);
+        }
+        
     } else if (sbyte == FEND) {
         IN_FRAME = true;
         command = CMD_UNKNOWN;
@@ -116,6 +177,7 @@ void kiss_serialCallback(uint8_t sbyte) {
             // strip off the port nibble of the command byte
             sbyte = sbyte & 0x0F;
             command = sbyte;
+            if (command == CMD_DATA) current_packet_start = queue_cursor;
         } else if (command == CMD_DATA) {
             if (sbyte == FESC) {
                 ESCAPE = true;
@@ -125,7 +187,11 @@ void kiss_serialCallback(uint8_t sbyte) {
                     if (sbyte == TFESC) sbyte = FESC;
                     ESCAPE = false;
                 }
-                serialBuffer[frame_len++] = sbyte;
+                if (queue_height < CONFIG_QUEUE_MAX_LENGTH && queued_bytes < CONFIG_QUEUE_SIZE) {
+                    queued_bytes++;
+                    packet_queue[queue_cursor++] = sbyte;
+                    if (queue_cursor == CONFIG_QUEUE_SIZE) queue_cursor = 0;
+                }
             }
         } else if (command == CMD_TXDELAY) {
             custom_preamble = sbyte * 10UL;
@@ -135,12 +201,11 @@ void kiss_serialCallback(uint8_t sbyte) {
             slotTime = sbyte * 10;
         } else if (command == CMD_P) {
             p = sbyte;
-        } else if (command == CMD_READY) {
-            if (sbyte == 0x00) {
-                FLOWCONTROL = false;
-            } else {
-                FLOWCONTROL = true;
-            }
+        } else if (command == CMD_FLUSHQUEUE) {
+            kiss_flushQueue();
+        // TODO: Remove this
+        } else if (command == CMD_FLUSHQUEUE_DEBUG) {
+            kiss_flushQueueDebug();
         }
         
     }

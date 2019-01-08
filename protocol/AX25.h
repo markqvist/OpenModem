@@ -6,10 +6,6 @@
 #include "device.h"
 #include "hardware/AFSK.h"
 
-#define AX25_MIN_FRAME_LEN 1
-#define AX25_MAX_FRAME_LEN 1532
-
-
 #define AX25_CRC_CORRECT  0xF0B8
 
 #define AX25_CTRL_UI      0x03

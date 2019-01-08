@@ -1,6 +1,7 @@
 #include <string.h>
 #include "AFSK.h"
 #include "util/time.h"
+#include "protocol/KISS.h"
 
 // TODO: Remove testing vars ////
 #define SAMPLES_TO_CAPTURE 128
@@ -618,33 +619,10 @@ ISR(TIMER3_CAPT_vect) {
 
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
-
+    
     if (CONFIG_FULL_DUPLEX || !hw_afsk_dac_isr) {
         AFSK_adc_isr(AFSK_modem, (ADCH - 128));
     }
 
     ++_clock;
-
-    /*
-    // TODO: Remove these debug sample collection functions
-
-    //DAC_PORT ^= 0xFF;
-    //DAC_PORT = ADCH;
-
-    if (capturedsamples == SAMPLES_TO_CAPTURE) {
-        printf("--- Dumping samples ---");
-        for (ticks_t i = 0; i < SAMPLES_TO_CAPTURE; i++) {
-            uint8_t c = samplebuf[i];
-            printf("%d\r\n", c);
-        }
-        printf("-------- Done ---------");
-    }
-    DAC_PORT ^= 0xFF;
-    if (capturedsamples < SAMPLES_TO_CAPTURE) {
-        samplebuf[capturedsamples++] = ADCH;
-        // Clear Input Capture Flag from Timer1 Interrupt Flag Register
-        // to allow for next capture interrupt to occur
-        TIFR1 = _BV(ICF1);
-    }
-    */
 }

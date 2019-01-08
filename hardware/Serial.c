@@ -5,6 +5,8 @@
 
 void serial_init(Serial *serial) {
     memset(serial, 0, sizeof(*serial));
+    memset(serialBuf, 0, sizeof(serialBuf));
+
     UBRR0H = UBRRH_VALUE;
     UBRR0L = UBRRL_VALUE;
 
@@ -14,13 +16,15 @@ void serial_init(Serial *serial) {
         UCSR0A &= ~(_BV(U2X0));
     #endif
 
-    // Set to 8-bit data, enable RX and TX
+    // Set to 8-bit data, enable RX and TX, enable receive interrupt
     UCSR0C = _BV(UCSZ01) | _BV(UCSZ00);
-    UCSR0B = _BV(RXEN0) | _BV(TXEN0);
+    UCSR0B = _BV(RXEN0) | _BV(TXEN0) | _BV(RXCIE0);
 
     FILE uart0_fd = FDEV_SETUP_STREAM(uart0_putchar, uart0_getchar, _FDEV_SETUP_RW);
     
     serial->uart0 = uart0_fd;
+
+    fifo_init(&serialFIFO, serialBuf, sizeof(serialBuf));
 }
 
 bool serial_available(uint8_t index) {
@@ -45,4 +49,11 @@ int uart0_getchar(FILE *stream) {
 char uart0_getchar_nowait(void) {
     if (!(UCSR0A & _BV(RXC0))) return EOF;
     return UDR0;
+}
+
+ISR(USART0_RX_vect) {
+    if (serial_available(0)) {
+        char c = uart0_getchar_nowait();
+        fifo_push(&serialFIFO, c);
+    }
 }

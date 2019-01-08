@@ -38,11 +38,8 @@ int main (void) {
 
     while (true) {
         ax25_poll(&AX25);
-        
-        if (serial_available(0)) {
-            char sbyte = uart0_getchar_nowait();
-            kiss_serialCallback(sbyte);
-        }
+        kiss_poll();
+        kiss_csma();
     }
 
     return(0);
