@@ -28,10 +28,10 @@ void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
 }
 
 // TODO: Remove debug functions
-// size_t decodes = 0;
+//size_t decodes = 0;
 void kiss_messageCallback(AX25Ctx *ctx) {
-    // decodes++;
-    // printf("%d\r\n", decodes);
+    //decodes++;
+    //printf("%d\r\n", decodes);
     
     fputc(FEND, &serial->uart0);
     fputc(0x00, &serial->uart0);
@@ -48,6 +48,7 @@ void kiss_messageCallback(AX25Ctx *ctx) {
         }
     }
     fputc(FEND, &serial->uart0);
+    
 }
 
 void kiss_csma(AX25Ctx *ctx, uint8_t *buf, size_t len) {

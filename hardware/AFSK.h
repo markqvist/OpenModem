@@ -46,10 +46,10 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CONFIG_AFSK_TRAILER_LEN 25UL
 #define BIT_STUFF_LEN 5
 
-#define BITRATE 300
+#define BITRATE 1200
 
 #if BITRATE == 300
-    #define CONFIG_ADC_SAMPLERATE 4800UL
+    #define CONFIG_ADC_SAMPLERATE 9600UL
     #define CONFIG_DAC_SAMPLERATE 19200UL
 #elif BITRATE == 1200
     #define CONFIG_ADC_SAMPLERATE 9600UL
@@ -78,8 +78,14 @@ inline static uint8_t sinSample(uint16_t i) {
     #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
 #endif
 
-// TODO: Calculate based on sample rate [Done?]
-#define PHASE_BITS   8                              // Sub-sample phase counter resolution
+#if BITRATE == 300
+    // TODO: Real-world tests on which resolution is best
+    //#define PHASE_BITS   8
+    #define PHASE_BITS   4
+#else
+    #define PHASE_BITS   8 // Sub-sample phase counter resolution
+#endif
+
 #define PHASE_INC    1                              // Nudge by above resolution for each adjustment
 
 #define PHASE_MAX    (ADC_SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
@@ -98,9 +104,16 @@ inline static uint8_t sinSample(uint16_t i) {
     #define PHASE_THRESHOLD  (PHASE_MAX / 2)  // Target transition point of our phase window
 #endif
 
-
-#define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
-#define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
+#if BITRATE == 300
+    #define DCD_TIMEOUT_SAMPLES 520
+    #define DCD_MIN_COUNT 2
+#elif BITRATE == 1200
+    #define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
+    #define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
+#elif BITRATE == 2400
+    #define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
+    #define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
+#endif
          
 // TODO: Revamp filtering              
 #if BITRATE == 1200
@@ -116,7 +129,7 @@ inline static uint8_t sinSample(uint16_t i) {
     //#define MARK_FREQ  2200
     //#define SPACE_FREQ 4000
 #elif BITRATE == 300
-    #define FILTER_CUTOFF 600
+    #define FILTER_CUTOFF 500
     #define MARK_FREQ  1600
     #define SPACE_FREQ 1800
 #else
@@ -154,7 +167,7 @@ typedef struct Afsk
     uint16_t phaseAcc;                      // Phase accumulator
     uint16_t phaseInc;                      // Phase increment per sample
 
-    uint8_t silentSamples;                 // How many samples were completely silent
+    uint16_t silentSamples;                 // How many samples were completely silent
 
     FIFOBuffer txFifo;                      // FIFO for transmit data
     uint8_t txBuf[CONFIG_AFSK_TX_BUFLEN];   // Actual data storage for said FIFO
@@ -169,7 +182,7 @@ typedef struct Afsk
     #elif BITRATE == 2400
         int8_t delayBuf[7 + 1];
     #elif BITRATE == 300
-        int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1];
+        int8_t delayBuf[16 + 1];
     #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data
@@ -180,6 +193,8 @@ typedef struct Afsk
 
     #if ADC_SAMPLESPERBIT < 17
         uint16_t sampledBits;               // Bits sampled by the demodulator (at ADC speed)
+    #elif ADC_SAMPLESPERBIT < 33
+        uint32_t sampledBits;
     #else
         #error Not enough space in sampledBits variable!
     #endif
