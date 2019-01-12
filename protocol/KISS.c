@@ -24,7 +24,7 @@ size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
-volatile last_serial_read = 0;
+volatile uint32_t last_serial_read = 0;
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
