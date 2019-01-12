@@ -40,6 +40,7 @@ void init(void) {
     system_check();
 }
 
+
 int main (void) {
     init();
 
@@ -47,7 +48,6 @@ int main (void) {
         ax25_poll(&AX25);
         kiss_poll();
         kiss_csma();
-        led_status();
     }
 
     return(0);

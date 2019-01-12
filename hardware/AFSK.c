@@ -6,11 +6,11 @@
 
 // TODO: Remove testing vars ////
 #define SAMPLES_TO_CAPTURE 128
-uint32_t capturedsamples = 0;
+ticks_t capturedsamples = 0;
 uint8_t samplebuf[SAMPLES_TO_CAPTURE];
 /////////////////////////////////
 
-extern volatile uint32_t _clock;
+extern volatile ticks_t _clock;
 extern unsigned long custom_preamble;
 extern unsigned long custom_tail;
 
@@ -24,6 +24,8 @@ int afsk_putchar(char c, FILE *stream);
 
 // ADC and clock setup
 void AFSK_hw_init(void) {
+    _clock = 0;
+    
     // Run ADC initialisation
     AFSK_adc_init();
 
@@ -612,6 +614,8 @@ ISR(ADC_vect) {
     if (CONFIG_FULL_DUPLEX || !hw_afsk_dac_isr) {
         AFSK_adc_isr(AFSK_modem, (ADCH - 128));
     }
+
+    update_led_status();
 
     ++_clock;
 }

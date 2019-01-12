@@ -2,9 +2,13 @@
 #include "util/time.h"
 
 uint8_t ledIntensity = CONFIG_LED_INTENSITY;
-uint32_t com_led_timeout = 0;
+ticks_t led_status_ticks_top = 0;
+ticks_t led_status_ticks = 0;
+ticks_t com_led_timeout = 0;
 
 void LED_init(void) {
+    led_status_ticks_top = ms_to_ticks(CONFIG_LED_UPDATE_INTERVAL_MS);
+
     // Enable output for LED pins and drain pin
     LED_DDR |= _BV(0) |	// RX
     		   _BV(1) | // TX
@@ -32,26 +36,20 @@ void LED_setIntensity(uint8_t value) {
 
 void LED_COM_ON(void) {
     LED_PORT |= _BV(4);
-    int32_t xa = timer_clock();
-    com_led_timeout = xa + ms_to_ticks(COM_LED_TIMEOUT_MS);
-    if (xa > com_led_timeout) {
-        while(true) {
-            LED_COM_ON();
-            LED_RX_ON();
-            LED_TX_ON();
-        }
-    }
+    com_led_timeout = timer_clock() + ms_to_ticks(CONFIG_COM_LED_TIMEOUT_MS);
 }
 
 void LED_COM_OFF(void) {
     LED_PORT &= ~_BV(4); 
 }
 
-void led_status(void) {
-    if (timer_clock() > com_led_timeout) {
-        if (LED_PORT & _BV(4)) {
-            printf("%d\r\n", timer_clock());
+void update_led_status(void) {
+    if (led_status_ticks >= led_status_ticks_top) {
+        if (timer_clock() > com_led_timeout) {
             LED_COM_OFF();
         }
+        led_status_ticks = 0;
+    } else {
+        led_status_ticks++;
     }
 }

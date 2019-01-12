@@ -24,7 +24,7 @@ size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
-volatile uint32_t last_serial_read = 0;
+volatile ticks_t last_serial_read = 0;
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
@@ -57,28 +57,30 @@ void kiss_poll(void) {
     }
 }
 
-// TODO: Remove debug functions
-//size_t decodes = 0;
+#if CONFIG_BENCHMARK_MODE
+    size_t decodes = 0;
+#endif
 void kiss_messageCallback(AX25Ctx *ctx) {
-    //decodes++;
-    //printf("%d\r\n", decodes);
-    
-    fputc(FEND, &serial->uart0);
-    fputc(0x00, &serial->uart0);
-    for (unsigned i = 0; i < ctx->frame_len-2; i++) {
-        uint8_t b = ctx->buf[i];
-        if (b == FEND) {
-            fputc(FESC, &serial->uart0);
-            fputc(TFEND, &serial->uart0);
-        } else if (b == FESC) {
-            fputc(FESC, &serial->uart0);
-            fputc(TFESC, &serial->uart0);
-        } else {
-            fputc(b, &serial->uart0);
+    #if CONFIG_BENCHMARK_MODE
+        decodes++;
+        printf("%d\r\n", decodes);
+    #else
+        fputc(FEND, &serial->uart0);
+        fputc(0x00, &serial->uart0);
+        for (unsigned i = 0; i < ctx->frame_len-2; i++) {
+            uint8_t b = ctx->buf[i];
+            if (b == FEND) {
+                fputc(FESC, &serial->uart0);
+                fputc(TFEND, &serial->uart0);
+            } else if (b == FESC) {
+                fputc(FESC, &serial->uart0);
+                fputc(TFESC, &serial->uart0);
+            } else {
+                fputc(b, &serial->uart0);
+            }
         }
-    }
-    fputc(FEND, &serial->uart0);
-    
+        fputc(FEND, &serial->uart0);
+    #endif
 }
 
 void kiss_csma(void) {

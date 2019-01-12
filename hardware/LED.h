@@ -16,6 +16,6 @@ void LED_setIntensity(uint8_t value);
 
 void LED_COM_ON(void);
 void LED_COM_OFF(void);
-void led_status(void);
+void update_led_status(void);
 
 #endif

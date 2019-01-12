@@ -16,7 +16,8 @@
 // TODO: Change this back to default
 #define CONFIG_LED_INTENSITY 35
 //#define CONFIG_LED_INTENSITY 192
-#define COM_LED_TIMEOUT_MS 40
+#define CONFIG_COM_LED_TIMEOUT_MS 40
+#define CONFIG_LED_UPDATE_INTERVAL_MS 40
 
 // Demodulator settings
 #define OPEN_SQUELCH true
@@ -29,6 +30,7 @@
 #define CONFIG_QUEUE_MAX_LENGTH 15
 #define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
 #define CONFIG_SERIAL_TIMEOUT_MS 10
+#define CONFIG_BENCHMARK_MODE false
 
 // CSMA Settings
 #define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx
