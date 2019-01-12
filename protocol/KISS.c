@@ -3,6 +3,7 @@
 
 #include "device.h"
 #include "hardware/Serial.h"
+#include "hardware/LED.h"
 #include "util/FIFO16.h"
 #include "util/time.h"
 #include "KISS.h"
@@ -23,7 +24,7 @@ size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
-volatile ticks_t last_serial_read = 0;
+volatile last_serial_read = 0;
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
@@ -222,6 +223,17 @@ void kiss_serialCallback(uint8_t sbyte) {
         // TODO: Remove this
         } else if (command == CMD_FLUSHQUEUE_DEBUG) {
             kiss_flushQueueDebug();
+        } else if (command == CMD_LED_INTENSITY) {
+            if (sbyte == FESC) {
+                ESCAPE = true;
+            } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                LED_setIntensity(sbyte);   
+            }
         }
         
     }

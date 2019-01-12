@@ -1,6 +1,7 @@
 #include <string.h>
 #include "AFSK.h"
 #include "util/time.h"
+#include "hardware/LED.h"
 #include "protocol/KISS.h"
 
 // TODO: Remove testing vars ////
@@ -28,10 +29,6 @@ void AFSK_hw_init(void) {
 
     // Run DAC initialisation
     AFSK_dac_init();
-
-    // Run LED initialisation
-    LED_TX_INIT();
-    LED_RX_INIT();
 }
 
 void AFSK_dac_init(void) {

@@ -36,6 +36,7 @@ bool serial_available(uint8_t index) {
 
 
 int uart0_putchar(char c, FILE *stream) {
+    LED_COM_ON();
     loop_until_bit_is_set(UCSR0A, UDRE0);
     UDR0 = c;
     return 1;
@@ -53,6 +54,7 @@ char uart0_getchar_nowait(void) {
 
 ISR(USART0_RX_vect) {
     if (serial_available(0)) {
+        LED_COM_ON();
         char c = uart0_getchar_nowait();
         fifo_push(&serialFIFO, c);
     }

@@ -7,6 +7,7 @@
 #include <stdbool.h>
 #include <avr/io.h>
 #include "util/FIFO.h"
+#include "hardware/LED.h"
 
 typedef struct Serial {
     FILE uart0;
