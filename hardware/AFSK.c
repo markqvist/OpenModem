@@ -6,11 +6,11 @@
 
 // TODO: Remove testing vars ////
 #define SAMPLES_TO_CAPTURE 128
-ticks_t capturedsamples = 0;
+uint32_t capturedsamples = 0;
 uint8_t samplebuf[SAMPLES_TO_CAPTURE];
 /////////////////////////////////
 
-extern volatile ticks_t _clock;
+extern volatile uint32_t _clock;
 extern unsigned long custom_preamble;
 extern unsigned long custom_tail;
 
