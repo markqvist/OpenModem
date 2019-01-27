@@ -66,7 +66,6 @@ void init(void) {
     sd_init();
 
     system_check();
-    sd_test();
 }
 
 
