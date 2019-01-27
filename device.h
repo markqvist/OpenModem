@@ -26,7 +26,7 @@
 #define BAUD 115200
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 7500
+#define CONFIG_QUEUE_SIZE 5000
 #define CONFIG_QUEUE_MAX_LENGTH 15
 #define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
 #define CONFIG_SERIAL_TIMEOUT_MS 10
@@ -44,14 +44,36 @@
 
 // Port settings
 #if TARGET_CPU == m1284p
-    #define ADC_PORT  PORTA
-    #define ADC_DDR   DDRA
-    #define DAC_PORT  PORTC
-    #define DAC_DDR   DDRC
-	#define VREF_PORT PORTD
-	#define VREF_DDR  DDRD
-    #define LED_PORT  PORTB
-    #define LED_DDR   DDRB
+    #define ADC_PORT  	PORTA
+    #define ADC_DDR   	DDRA
+
+    #define DAC_PORT  	PORTC
+    #define DAC_DDR   	DDRC
+
+	#define VREF_PORT 	PORTD
+	#define VREF_DDR  	DDRD
+
+    #define LED_PORT  	PORTB
+    #define LED_DDR   	DDRB
+
+	#define PTT_DDR   	DDRD
+	#define PTT_PORT  	PORTD
+	#define PTT_PIN   	5
+	#define PTT_NEG_PIN	4
+
+	#define SPI_PORT    PORTB
+	#define SPI_DDR		DDRB
+	#define SPI_MOSI	5
+	#define SPI_MISO	6
+	#define SPI_CLK		7
+
+	#define SD_CS_DDR	DDRA
+	#define SD_CS_PORT  PORTA
+	#define SD_CS_PIN   6
+	#define SD_DETECT_DDR	DDRA
+	#define SD_DETECT_PORT  PORTA
+	#define SD_DETECT_INPUT PINA
+	#define SD_DETECT_PIN	7
 #endif
 
 #endif
@@ -59,19 +81,19 @@
 /*
 
 PA0		ANALOG_IN
-PA1		
-PA2		
-PA3		
-PA4		
-PA5		
-PA6		
-PA7		
+PA1		USR_1
+PA2		USR_2
+PA3		USR_3 / BT_MODE		// TODO: Set as output
+PA4		USR_4 / BT_RTS		// TODO: Set as input
+PA5		GPS_EN				// TODO: Set as output/input
+PA6		SD_CS				// TODO: Set as output
+PA7		SD_DETECT			// TODO: Set as input and enable pullup
 
 PB0		LED_RX
 PB1		LED_TX
 PB2		LED_STATUS
 PB3		LED_DRAIN_PWM
-PB4		LED_COM / SPI_SS	PGM
+PB4		LED_COM / SPI_SS	(PGM)
 PB5		SPI_MOSI			SD/PGM
 PB6		SPI_MISO			SD/PGM
 PB7		SPI_CLK				SD/PGM
@@ -89,8 +111,8 @@ PD0		UART0_RX
 PD1		UART0_TX
 PD2		UART1_RX		GPS
 PD3		UART1_TX		GPS
-PD4		
-PD5		
+PD4		PTT_NEG
+PD5		PTT_SIG
 PD6		REF_DAC
 PD7		REF_ADC
 

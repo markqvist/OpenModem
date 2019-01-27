@@ -1,9 +1,9 @@
 #define PROTOCOL_KISS 0x01
 #define PROTOCOL_RAW 0x02
 
-#define m328p  0x01
 #define m1284p 0x02
-#define m644p  0x03
 
-#define REF_3V3 0x01
-#define REF_5V  0x02
+#define START_FROM_BOOTLOADER 0x01
+#define START_FROM_POWERON 0x02
+#define START_FROM_BROWNOUT 0x03
+#define START_FROM_JTAG 0x04

@@ -9,6 +9,7 @@ void LED_setIntensity(uint8_t value);
 
 #define LED_STATUS_ON()   do { LED_PORT |= _BV(2); } while (0)
 #define LED_STATUS_OFF()  do { LED_PORT &= ~_BV(2); } while (0)
+#define LED_STATUS_TOGGLE()  do { LED_PORT ^= _BV(2); } while (0)
 #define LED_TX_ON()   do { LED_PORT |= _BV(1); } while (0)
 #define LED_TX_OFF()  do { LED_PORT &= ~_BV(1); } while (0)
 #define LED_RX_ON()   do { LED_PORT |= _BV(0); } while (0)

@@ -3,6 +3,8 @@
 
 #include <util/atomic.h>
 #include "hardware/AFSK.h"
+#include "hardware/LED.h"
+#include "hardware/sdcard/diskio.h"
 
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
 
@@ -36,5 +38,4 @@ static inline void delay_ms(unsigned long ms) {
         cpu_relax();
     }
 }
-
 #endif

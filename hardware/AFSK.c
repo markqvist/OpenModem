@@ -49,6 +49,9 @@ void AFSK_dac_init(void) {
 
     TIMSK3 = _BV(ICIE3);
 
+    PTT_DDR |= _BV(PTT_PIN);
+    PTT_DDR |= _BV(PTT_NEG_PIN);
+
 }
 
 void AFSK_adc_init(void) {
@@ -598,13 +601,24 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 }
 
+inline void timed_functions(void) {
+    update_led_status();
+    if (_clock % CLOCK_TICKS_PER_10_MS == 0) {
+        disk_timerproc();
+    }
+}
+
 ISR(TIMER3_CAPT_vect) {
     if (hw_afsk_dac_isr) {
         DAC_PORT = AFSK_dac_isr(AFSK_modem);
         LED_TX_ON();
+        PTT_PORT |= _BV(PTT_PIN);
+        PTT_PORT &= ~_BV(PTT_NEG_PIN);
     } else {
         LED_TX_OFF();
         DAC_PORT = 127;
+        PTT_PORT &= ~_BV(PTT_PIN);
+        PTT_PORT |= _BV(PTT_NEG_PIN);
     }
 }
 
@@ -615,7 +629,7 @@ ISR(ADC_vect) {
         AFSK_adc_isr(AFSK_modem, (ADCH - 128));
     }
 
-    update_led_status();
+    timed_functions();
 
     ++_clock;
 }
