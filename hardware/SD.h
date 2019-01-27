@@ -7,7 +7,6 @@
 #include "device.h"
 #include "util/time.h"
 #include "hardware/sdcard/ff.h"
-#include "hardware/sdcard/integer.h"
 
 void sd_init(void);
 void sd_test(void);

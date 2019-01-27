@@ -93,6 +93,7 @@ void kiss_csma(void) {
                         kiss_flushQueue();
                     } else {
                         // TODO: Implement real CSMA
+                        kiss_flushQueue();
                     }
                 }
             }
@@ -102,6 +103,7 @@ void kiss_csma(void) {
                     kiss_flushQueue();
                 } else {
                     // TODO: Implement real CSMA
+                    kiss_flushQueue();
                 }
             }
         #endif

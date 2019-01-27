@@ -26,7 +26,7 @@
 #define BAUD 115200
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 5000
+#define CONFIG_QUEUE_SIZE 5000 // TODO: Optimise this by saving ram other places
 #define CONFIG_QUEUE_MAX_LENGTH 15
 #define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
 #define CONFIG_SERIAL_TIMEOUT_MS 10

@@ -14,7 +14,7 @@ void sd_init(void) {
 
 // TODO: Remove this
 void sd_test(void) {
-    printf("Testing SD card functions\r\n");
+    printf("Testing SD card functions, waiting for card...\r\n");
 
     FRESULT res = 0xFF;
     while (res != 0) {
@@ -36,12 +36,13 @@ void sd_test(void) {
 
     
     fr = f_open(&fil, "file1.txt", FA_READ);
-    printf("File open result: %d\r\n", fr);
+    printf("File open result: %d\r\nContents:\r\n", fr);
 
     
     while (f_gets(line, sizeof line, &fil)) {
         printf(line);
     }
+    printf("\r\n");
 
     f_close(&fil);
 
@@ -49,13 +50,13 @@ void sd_test(void) {
 }
 
 // TODO: Get time from RTC or host
-// DWORD get_fattime (void)
-// {
-//     // Returns current time packed into a DWORD variable 
-//     return    ((DWORD)(2013 - 1980) << 25)  // Year 2013 
-//     | ((DWORD)8 << 21)              // Month 7 
-//     | ((DWORD)2 << 16)              // Mday 28 
-//     | ((DWORD)20 << 11)             // Hour 0..24
-//     | ((DWORD)30 << 5)              // Min 0 
-//     | ((DWORD)0 >> 1);              // Sec 0
-// }
+DWORD get_fattime (void)
+{
+    // Returns current time packed into a DWORD variable 
+    return    ((DWORD)(2013 - 1980) << 25)  // Year 2013 
+    | ((DWORD)8 << 21)              // Month 7 
+    | ((DWORD)2 << 16)              // Mday 28 
+    | ((DWORD)20 << 11)             // Hour 0..24
+    | ((DWORD)30 << 5)              // Min 0 
+    | ((DWORD)0 >> 1);              // Sec 0
+}

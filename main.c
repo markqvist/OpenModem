@@ -64,6 +64,7 @@ void init(void) {
     ax25_init(&AX25, &modem, &modem.fd, ax25_callback);
     kiss_init(&AX25, &modem, &serial);
     sd_init();
+    //sd_test(); // TODO: Remove
 
     system_check();
 }

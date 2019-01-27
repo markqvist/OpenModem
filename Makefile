@@ -6,7 +6,7 @@ TARGET = images/OpenModem
 OPT = s
 FORMAT = ihex
 
-SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/SD.c hardware/sdcard/sdio.c hardware/sdcard/ff.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
+SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
 
 
 # List Assembler source files here.
