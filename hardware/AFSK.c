@@ -45,7 +45,6 @@ void AFSK_dac_init(void) {
              _BV(WGM32);
 
     ICR3 = DAC_TICKS_BETWEEN_SAMPLES;
-    //OCR3A = DAC_TICKS_BETWEEN_SAMPLES;
 
     TIMSK3 = _BV(ICIE3);
 
