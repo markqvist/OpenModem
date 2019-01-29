@@ -601,8 +601,11 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 
 }
 
+uint8_t timed_functions_timer = 0;
 inline void timed_functions(void) {
-    if (_clock % CLOCK_TICKS_PER_10_MS == 0) {
+    timed_functions_timer++;
+    if (timed_functions_timer >= CLOCK_TICKS_PER_10_MS) {
+        timed_functions_timer = 0;
         sd_scheduler();
     }
 }

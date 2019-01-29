@@ -40,7 +40,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 
-#define BITRATE 2400
+#define BITRATE 1200
 
 #if BITRATE == 300
     #define CONFIG_ADC_SAMPLERATE 9600UL
@@ -69,7 +69,7 @@ inline static uint8_t sinSample(uint16_t i) {
     #define CONFIG_AFSK_PREAMBLE_LEN 150UL
     #define CONFIG_AFSK_TRAILER_LEN 10UL
 #elif BITRATE == 2400
-    #define CONFIG_AFSK_PREAMBLE_LEN 200UL
+    #define CONFIG_AFSK_PREAMBLE_LEN 230UL
     #define CONFIG_AFSK_TRAILER_LEN 25UL
 #endif
 

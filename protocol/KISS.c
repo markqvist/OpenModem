@@ -111,22 +111,22 @@ void kiss_csma(void) {
 }
 
 // TODO: Remove this
-void kiss_flushQueueDebug(void) {
-    printf("Queue height %d\r\n", queue_height);
-    for (size_t n = 0; n < queue_height; n++) {
-        size_t start = fifo16_pop(&packet_starts);
-        size_t length = fifo16_pop(&packet_lengths);
+// void kiss_flushQueueDebug(void) {
+//     printf("Queue height %d\r\n", queue_height);
+//     for (size_t n = 0; n < queue_height; n++) {
+//         size_t start = fifo16_pop(&packet_starts);
+//         size_t length = fifo16_pop(&packet_lengths);
 
-        printf("--- Packet %d, %d bytes ---\r\n", n+1, length);
-        for (size_t i = 0; i < length; i++) {
-            size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
-            printf("%02x", packet_queue[pos]);
-        }
-        printf("\r\n\r\n");
-    }
-    queue_height = 0;
-    queued_bytes = 0;
-}
+//         printf("--- Packet %d, %d bytes ---\r\n", n+1, length);
+//         for (size_t i = 0; i < length; i++) {
+//             size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
+//             printf("%02x", packet_queue[pos]);
+//         }
+//         printf("\r\n\r\n");
+//     }
+//     queue_height = 0;
+//     queued_bytes = 0;
+// }
 
 volatile bool queue_flushing = false;
 void kiss_flushQueue(void) {
@@ -154,7 +154,6 @@ void kiss_flushQueue(void) {
                 LED_RX_ON();
             }
         }
-        //printf("Processed %d\r\n", processed);
 
         queue_height = 0;
         queued_bytes = 0;
@@ -176,7 +175,6 @@ void kiss_serialCallback(uint8_t sbyte) {
             fifo16_push_locked(&packet_lengths, l);
 
             current_packet_start = queue_cursor;
-            printf("Queue height %d\r\n", queue_height);
         }
         
     } else if (sbyte == FEND) {
@@ -217,8 +215,8 @@ void kiss_serialCallback(uint8_t sbyte) {
         } else if (command == CMD_FLUSHQUEUE) {
             kiss_flushQueue();
         // TODO: Remove this
-        } else if (command == CMD_FLUSHQUEUE_DEBUG) {
-            kiss_flushQueueDebug();
+        //} else if (command == CMD_FLUSHQUEUE_DEBUG) {
+        //    kiss_flushQueueDebug();
         } else if (command == CMD_LED_INTENSITY) {
             if (sbyte == FESC) {
                 ESCAPE = true;

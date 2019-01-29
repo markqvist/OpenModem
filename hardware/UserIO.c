@@ -79,10 +79,38 @@ void usrio_4_off(void) {
 }
 
 void usrio_1_toggle(void) {
-	if (usrio_1()) {
-		usrio_1_off();
+	if (!bluetooth_enabled()) {
+		if (usrio_1()) {
+			usrio_1_off();
+		} else {
+			usrio_1_on();
+		}
+	}
+}
+
+void usrio_2_toggle(void) {
+	if (!bluetooth_enabled()) {
+		if (usrio_2()) {
+			usrio_2_off();
+		} else {
+			usrio_2_on();
+		}
+	}
+}
+
+void usrio_3_toggle(void) {
+	if (usrio_3()) {
+		usrio_3_off();
 	} else {
-		usrio_1_on();
+		usrio_3_on();
+	}
+}
+
+void usrio_4_toggle(void) {
+	if (usrio_4()) {
+		usrio_4_off();
+	} else {
+		usrio_4_on();
 	}
 }
 

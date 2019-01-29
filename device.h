@@ -11,7 +11,7 @@
 // Voltage references
 // TODO: Determine best defaults
 #define CONFIG_ADC_REF 255
-#define CONFIG_DAC_REF 255
+#define CONFIG_DAC_REF 128
 
 // TODO: Change this back to default
 #define CONFIG_LED_INTENSITY 35

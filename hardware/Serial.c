@@ -52,15 +52,6 @@ ISR(USART0_RX_vect) {
         if (!fifo_isfull(&serialFIFO)) {
             char c = uart0_getchar_nowait();
             fifo_push(&serialFIFO, c);
-        } else {
-            // TODO: Remove this
-            printf("SERIAL FIFO OVERRUN\r\n");
-            printf("QH: %d", queue_height);
-            while(true) {
-                LED_TX_ON();
-                LED_RX_ON();
-                LED_COM_ON();
-            }
         }
     }
 }
