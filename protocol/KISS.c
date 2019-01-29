@@ -162,14 +162,6 @@ void kiss_flushQueue(void) {
     }
 }
 
-uint8_t kiss_queuedPackets(void) {
-    return 0;
-}
-
-bool kiss_queueIsFull(void) {
-    return false;
-}
-
 void kiss_serialCallback(uint8_t sbyte) {
     if (IN_FRAME && sbyte == FEND && command == CMD_DATA) {
         IN_FRAME = false;
@@ -184,7 +176,7 @@ void kiss_serialCallback(uint8_t sbyte) {
             fifo16_push_locked(&packet_lengths, l);
 
             current_packet_start = queue_cursor;
-            //printf("Queue height %d\r\n", queue_height);
+            printf("Queue height %d\r\n", queue_height);
         }
         
     } else if (sbyte == FEND) {

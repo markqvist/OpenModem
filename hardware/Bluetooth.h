@@ -15,5 +15,3 @@ bool bluetooth_enabled(void);
 
 
 #endif
-
-// CMD/DATA sequence: 0x2b2b2b0d

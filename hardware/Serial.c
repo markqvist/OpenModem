@@ -2,6 +2,8 @@
 #include <stdio.h>
 #include <string.h>
 
+extern volatile uint8_t queue_height;
+
 void serial_init(Serial *serial) {
     memset(serial, 0, sizeof(*serial));
     memset(serialBuf, 0, sizeof(serialBuf));
@@ -47,8 +49,19 @@ char uart0_getchar_nowait(void) {
 ISR(USART0_RX_vect) {
     if (serial_available(0)) {
         LED_COM_ON();
-        char c = uart0_getchar_nowait();
-        fifo_push(&serialFIFO, c);
+        if (!fifo_isfull(&serialFIFO)) {
+            char c = uart0_getchar_nowait();
+            fifo_push(&serialFIFO, c);
+        } else {
+            // TODO: Remove this
+            printf("SERIAL FIFO OVERRUN\r\n");
+            printf("QH: %d", queue_height);
+            while(true) {
+                LED_TX_ON();
+                LED_RX_ON();
+                LED_COM_ON();
+            }
+        }
     }
 }
 

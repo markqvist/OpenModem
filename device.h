@@ -10,7 +10,7 @@
 
 // Voltage references
 // TODO: Determine best defaults
-#define CONFIG_ADC_REF 128
+#define CONFIG_ADC_REF 255
 #define CONFIG_DAC_REF 255
 
 // TODO: Change this back to default
@@ -25,9 +25,9 @@
 // Serial settings
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 3000 // TODO: Optimise this by saving ram other places, add SD queue
+#define CONFIG_QUEUE_SIZE 6000 // TODO: Optimise this by saving ram other places, add SD queue
 #define CONFIG_QUEUE_MAX_LENGTH 15
-#define CONFIG_SERIAL_BUFFER_SIZE 1532 // TODO: Tune this, what is actually required?
+#define CONFIG_SERIAL_BUFFER_SIZE 1536 // TODO: Tune this, what is actually required?
 #define CONFIG_SERIAL_TIMEOUT_MS 10
 #define CONFIG_BENCHMARK_MODE false
 
@@ -36,7 +36,7 @@
 #define CONFIG_CSMA_P 255
 
 #define AX25_MIN_FRAME_LEN 1
-#define AX25_MAX_FRAME_LEN 1532
+#define AX25_MAX_FRAME_LEN 600
 
 // Packet settings
 #define CONFIG_PASSALL false
