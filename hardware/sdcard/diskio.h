@@ -37,7 +37,7 @@ DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count);
 DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff);
 
-void disk_timerproc (void);
+void disk_timerproc(void);
 
 
 /* Disk Status Bits (DSTATUS) */

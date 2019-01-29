@@ -1,6 +1,8 @@
 #include <stdbool.h>
 #include <avr/io.h>
 #include <avr/wdt.h>
+#include <avr/pgmspace.h>
+#include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
 
@@ -9,7 +11,9 @@
 #include "hardware/AFSK.h"
 #include "hardware/Serial.h"
 #include "hardware/LED.h"
+#include "hardware/UserIO.h"
 #include "hardware/SD.h"
+#include "hardware/Bluetooth.h"
 #include "protocol/AX25.h"
 #include "protocol/KISS.h"
 #include "util/time.h"
@@ -40,8 +44,8 @@ void system_check(void) {
     } else if (OPTIBOOT_MCUSR & (1<<WDRF)) {
       boot_vector = START_FROM_BOOTLOADER;
     } else {
-        printf("Error, indeterminate boot vector %d\r\n", OPTIBOOT_MCUSR);
-        printf("System start has been halted\r\n");
+        printf(PSTR("Error, indeterminate boot vector %d\r\n"), OPTIBOOT_MCUSR);
+        printf(PSTR("System start has been halted\r\n"));
         while (true) {
             LED_TX_ON();
             LED_COM_ON();
@@ -64,7 +68,8 @@ void init(void) {
     ax25_init(&AX25, &modem, &modem.fd, ax25_callback);
     kiss_init(&AX25, &modem, &serial);
     sd_init();
-    //sd_test(); // TODO: Remove
+    bluetooth_init();
+    usrio_init();
 
     system_check();
 }
@@ -77,6 +82,7 @@ int main (void) {
         ax25_poll(&AX25);
         kiss_poll();
         kiss_csma();
+        sd_jobs();
     }
 
     return(0);

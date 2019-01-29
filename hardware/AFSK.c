@@ -3,6 +3,7 @@
 #include "util/time.h"
 #include "hardware/LED.h"
 #include "protocol/KISS.h"
+#include "hardware/SD.h"
 
 // TODO: Remove testing vars ////
 #define SAMPLES_TO_CAPTURE 128
@@ -603,7 +604,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 inline void timed_functions(void) {
     update_led_status();
     if (_clock % CLOCK_TICKS_PER_10_MS == 0) {
-        disk_timerproc();
+        sd_scheduler();
     }
 }
 

@@ -22,4 +22,17 @@ int uart0_putchar(char c, FILE *stream);
 int uart0_getchar(FILE *stream);
 char uart0_getchar_nowait(void);
 
+void serial_setbaudrate_1200(void);
+void serial_setbaudrate_2400(void);
+void serial_setbaudrate_4800(void);
+void serial_setbaudrate_9600(void);
+void serial_setbaudrate_14400(void);
+void serial_setbaudrate_19200(void);
+void serial_setbaudrate_28800(void);
+void serial_setbaudrate_38400(void);
+void serial_setbaudrate_57600(void);
+void serial_setbaudrate_76800(void);
+void serial_setbaudrate_115200(void);
+void serial_setbaudrate_230400(void);
+
 #endif

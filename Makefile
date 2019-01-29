@@ -6,7 +6,7 @@ TARGET = images/OpenModem
 OPT = s
 FORMAT = ihex
 
-SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
+SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/UserIO.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c hardware/Bluetooth.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
 
 
 # List Assembler source files here.
@@ -22,7 +22,7 @@ EXTRAINCDIRS =
 #  -Wall...:  warning level
 #  -Wa,...:   tell GCC to pass this to the assembler.
 #    -ahlms:  create assembler listing
-CFLAGS = -g -O$(OPT) \
+CFLAGS = -O$(OPT) \
 -funsigned-char -funsigned-bitfields -fpack-struct -fshort-enums \
 -Wall -Wstrict-prototypes -fno-strict-aliasing \
 -Wa,-adhlns=$(<:.c=.lst) \

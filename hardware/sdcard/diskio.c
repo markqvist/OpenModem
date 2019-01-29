@@ -56,14 +56,9 @@
 #define CMD58	(58)		/* READ_OCR */
 
 
-static volatile
-DSTATUS Stat = STA_NOINIT;	/* Disk status */
-
-static volatile
-BYTE Timer1, Timer2;	/* 100Hz decrement timer */
-
-static
-BYTE CardType;			/* Card type flags */
+static volatile DSTATUS Stat = STA_NOINIT;	/* Disk status */
+static BYTE CardType;			/* Card type flags */
+static volatile BYTE Timer1, Timer2;	/* 100Hz decrement timer */
 
 
 /*-----------------------------------------------------------------------*/

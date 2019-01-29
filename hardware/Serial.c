@@ -1,5 +1,4 @@
 #include "Serial.h"
-#include <util/setbaud.h>
 #include <stdio.h>
 #include <string.h>
 
@@ -7,14 +6,7 @@ void serial_init(Serial *serial) {
     memset(serial, 0, sizeof(*serial));
     memset(serialBuf, 0, sizeof(serialBuf));
 
-    UBRR0H = UBRRH_VALUE;
-    UBRR0L = UBRRL_VALUE;
-
-    #if USE_2X
-        UCSR0A |= _BV(U2X0);
-    #else
-        UCSR0A &= ~(_BV(U2X0));
-    #endif
+    serial_setbaudrate_115200();
 
     // Set to 8-bit data, enable RX and TX, enable receive interrupt
     UCSR0C = _BV(UCSZ01) | _BV(UCSZ00);
@@ -59,3 +51,150 @@ ISR(USART0_RX_vect) {
         fifo_push(&serialFIFO, c);
     }
 }
+
+void serial_setbaudrate_1200(void) {
+    #undef BAUD
+    #define BAUD 1200
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_2400(void) {
+    #undef BAUD
+    #define BAUD 2400
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_4800(void) {
+    #undef BAUD
+    #define BAUD 4800
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+
+
+void serial_setbaudrate_9600(void) {
+    #undef BAUD
+    #define BAUD 9600
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_14400(void) {
+    #undef BAUD
+    #define BAUD 14400
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_19200(void) {
+    #undef BAUD
+    #define BAUD 19200
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_28800(void) {
+    #undef BAUD
+    #define BAUD 28800
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_38400(void) {
+    #undef BAUD
+    #define BAUD 38400
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_57600(void) {
+    #undef BAUD
+    #define BAUD 57600
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_76800(void) {
+    #undef BAUD
+    #define BAUD 76800
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_115200(void) {
+    #undef BAUD
+    #define BAUD 115200
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
+void serial_setbaudrate_230400(void) {
+    #undef BAUD
+    #define BAUD 230400
+    #include <util/setbaud.h>
+    UBRR0H = UBRRH_VALUE; UBRR0L = UBRRL_VALUE;
+    #if USE_2X
+        UCSR0A |= _BV(U2X0);
+    #else
+        UCSR0A &= ~(_BV(U2X0));
+    #endif
+}
+
