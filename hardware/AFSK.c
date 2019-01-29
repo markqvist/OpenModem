@@ -602,7 +602,6 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
 }
 
 inline void timed_functions(void) {
-    update_led_status();
     if (_clock % CLOCK_TICKS_PER_10_MS == 0) {
         sd_scheduler();
     }
@@ -625,11 +624,12 @@ ISR(TIMER3_CAPT_vect) {
 ISR(ADC_vect) {
     TIFR1 = _BV(ICF1);
     
-    if (CONFIG_FULL_DUPLEX || !hw_afsk_dac_isr) {
+    if (!hw_afsk_dac_isr) {
         AFSK_adc_isr(AFSK_modem, (ADCH - 128));
+        timed_functions();
     }
 
-    timed_functions();
+    update_led_status();
 
     ++_clock;
 }

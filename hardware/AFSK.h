@@ -9,6 +9,7 @@
 #include "util/FIFO.h"
 #include "protocol/HDLC.h"
 
+// TODO: Optimise RAM by moving this to progmem
 #define SIN_LEN 512
 static const uint8_t sine_table[] =
 {
