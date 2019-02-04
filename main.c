@@ -13,6 +13,7 @@
 #include "hardware/LED.h"
 #include "hardware/UserIO.h"
 #include "hardware/SD.h"
+#include "hardware/Crypto.h"
 #include "hardware/Bluetooth.h"
 #include "hardware/GPS.h"
 #include "protocol/AX25.h"
@@ -69,6 +70,7 @@ void init(void) {
     ax25_init(&AX25, &modem, &modem.fd, ax25_callback);
     kiss_init(&AX25, &modem, &serial);
     sd_init();
+    crypto_init();
     bluetooth_init();
     gps_init(&serial);
     usrio_init();
