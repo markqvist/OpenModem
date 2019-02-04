@@ -13,7 +13,7 @@ void bluetooth_init(void) {
 		// Check module RTS pin is pulled low
 		if (!(BT_INPUT &_BV(BT_RTS))) {
 			// Reconfigure UART to 9600 baud and issue reset
-			serial_setbaudrate_9600();
+			serial_setbaudrate_9600(0);
 			delay_ms(BT_AT_DELAY*2);
 			printf(PSTR("AT"));
 			printf(PSTR("AT+FACTORYRESET\r\n"));

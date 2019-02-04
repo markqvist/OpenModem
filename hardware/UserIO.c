@@ -2,8 +2,10 @@
 #include "hardware/Bluetooth.h"
 
 void usrio_init(void) {
-	USR_IO_DDR |= _BV(USR_IO_1) | _BV(USR_IO_2); 
-	// TODO: Add BT module detect and set up other pins accordingly
+	USR_IO_DDR |= _BV(USR_IO_1) | _BV(USR_IO_2);
+	if (!bluetooth_enabled()) {
+		USR_IO_DDR |= _BV(USR_IO_3) | _BV(USR_IO_4);
+	}
 }
 
 bool usrio_1(void) {

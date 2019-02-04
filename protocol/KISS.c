@@ -50,8 +50,8 @@ void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
 }
 
 void kiss_poll(void) {
-    while (!fifo_isempty_locked(&serialFIFO)) {
-        char sbyte = fifo_pop_locked(&serialFIFO);
+    while (!fifo_isempty_locked(&uart0FIFO)) {
+        char sbyte = fifo_pop_locked(&uart0FIFO);
         kiss_serialCallback(sbyte);
         last_serial_read = timer_clock();
     }

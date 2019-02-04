@@ -27,7 +27,8 @@
 #define TX_MAXWAIT 2UL
 #define CONFIG_QUEUE_SIZE 6000 // TODO: Optimise this by saving ram other places, add SD queue
 #define CONFIG_QUEUE_MAX_LENGTH 15
-#define CONFIG_SERIAL_BUFFER_SIZE 1536 // TODO: Tune this, what is actually required?
+#define CONFIG_UART0_BUFFER_SIZE 1536 // TODO: Tune this, what is actually required?
+#define CONFIG_UART1_BUFFER_SIZE 128
 #define CONFIG_SERIAL_TIMEOUT_MS 10
 #define CONFIG_BENCHMARK_MODE false
 
@@ -80,6 +81,11 @@
 	#define BT_MODE		3
 	#define BT_RTS		4
 
+	#define GPS_DDR		DDRA
+	#define GPS_PORT	PORTA
+	#define GPS_INPUT	PINA
+	#define GPS_EN_PIN	5
+
 	#define USR_IO_DDR	DDRA
 	#define USR_IO_PORT	PORTA
 	#define USR_IO_1	1
@@ -91,7 +97,6 @@
 #endif
 
 /*
-
 PA0		ANALOG_IN
 PA1		USR_1
 PA2		USR_2
@@ -127,5 +132,4 @@ PD4		PTT_NEG
 PD5		PTT_SIG
 PD6		REF_DAC
 PD7		REF_ADC
-
 */

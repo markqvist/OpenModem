@@ -6,7 +6,7 @@ TARGET = images/OpenModem
 OPT = s
 FORMAT = ihex
 
-SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/UserIO.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c hardware/Bluetooth.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
+SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/UserIO.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c hardware/Bluetooth.c hardware/GPS.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
 
 
 # List Assembler source files here.
@@ -36,10 +36,11 @@ CFLAGS += -std=gnu99
 ASFLAGS = -Wa,-adhlns=$(<:.S=.lst),-gstabs 
 
 # Optional linker flags.
+# Previous: LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
 #  -Wl,...:   tell GCC to pass this to linker.
 #  -Map:      create map file
 #  --cref:    add cross reference to  map file
-LDFLAGS = -Wl,-Map=$(TARGET).map,--cref
+LDFLAGS = -Wl,-u,vfprintf,-lprintf_flt,-Map=$(TARGET).map,--cref
 
 # Additional libraries
 LDFLAGS += -lm

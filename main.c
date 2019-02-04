@@ -14,6 +14,7 @@
 #include "hardware/UserIO.h"
 #include "hardware/SD.h"
 #include "hardware/Bluetooth.h"
+#include "hardware/GPS.h"
 #include "protocol/AX25.h"
 #include "protocol/KISS.h"
 #include "util/time.h"
@@ -69,6 +70,7 @@ void init(void) {
     kiss_init(&AX25, &modem, &serial);
     sd_init();
     bluetooth_init();
+    gps_init(&serial);
     usrio_init();
 
     system_check();
@@ -83,6 +85,7 @@ int main (void) {
         kiss_poll();
         kiss_csma();
         sd_jobs();
+        gps_poll();
     }
 
     return(0);
