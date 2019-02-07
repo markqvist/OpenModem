@@ -6,9 +6,9 @@ TARGET = images/OpenModem
 OPT = s
 FORMAT = ihex
 
-SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/UserIO.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c hardware/Bluetooth.c hardware/GPS.c hardware/Crypto.c hardware/crypto/AES.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
+SRC = main.c hardware/Serial.c hardware/AFSK.c hardware/VREF.c hardware/LED.c hardware/UserIO.c hardware/SD.c hardware/sdcard/diskio.c hardware/sdcard/ff.c hardware/sdcard/ffsystem.c hardware/sdcard/ffunicode.c hardware/Bluetooth.c hardware/GPS.c hardware/Crypto.c hardware/crypto/AES.c hardware/crypto/HMAC_MD5.c hardware/crypto/MD5.c hardware/crypto/MD5_sbox.c util/CRC-CCIT.c protocol/AX25.c protocol/KISS.c
 
-
+# TODO: Try hardware/crypto/MD5_asm.S
 # List Assembler source files here.
 ASRC = 
 

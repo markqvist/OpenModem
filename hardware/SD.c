@@ -30,6 +30,9 @@ void sd_automounted_hook(void) {
 
 void sd_autounmounted_hook(void) {
     sd_statuschange_indication(0);
+    if (crypto_enabled()) {
+        LED_indicate_error_crypto();
+    }
 }
 
 void sd_jobs(void) {

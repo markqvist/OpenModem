@@ -25,23 +25,26 @@ void crypto_init(void) {
 	}
 
 	if (encryption_enabled) {
-		// TODO: Set flags for crypto enabled
-
-		// TODO: Remove
-		// for (uint8_t i = 0; i < 130; i++) {
-		// 	crypto_test();
-		// }
+		LED_indicate_enabled_crypto();
 	} else {
 		LED_indicate_error_crypto();
 	}
 }
 
-void crypto_prepare(uint8_t key[CRYPTO_KEY_SIZE], uint8_t initialization_vector[CRYPTO_KEY_SIZE]) {
+void crypto_generate_hmac(uint8_t *data, size_t length) {
+	hmac_md5(crypto_work_block, active_key, CRYPTO_KEY_SIZE_BITS, data, length*8);
+}
+
+bool crypto_enabled(void) {
+	return encryption_enabled;
+}
+
+void crypto_prepare(void) {
   // Initialise the context with the key
-  aes_128_init(&context, key);
+  aes_128_init(&context, active_key);
 
   // Copy the IV into the current vector array
-  memcpy(current_vector, initialization_vector, CRYPTO_KEY_SIZE);
+  memcpy(current_vector, active_iv, CRYPTO_KEY_SIZE);
 }
 
 void crypto_encrypt_block(uint8_t block[CRYPTO_KEY_SIZE]) {
@@ -82,7 +85,6 @@ bool load_entropy_index(void) {
 	if (sd_mounted()) {
 		crypto_fr = f_open(&crypto_fp, PATH_ENTROPY_INDEX, FA_READ);
 		if (crypto_fr == FR_NO_FILE) {
-			//printf("Entropy index file does not exist\r\n");
 			f_close(&crypto_fp);
 			crypto_fr = f_open(&crypto_fp, PATH_ENTROPY_INDEX, FA_CREATE_NEW | FA_WRITE);
 
@@ -99,27 +101,20 @@ bool load_entropy_index(void) {
 				} else {
 					//printf("Could not write index to index file\r\n");
 				}
-			} else {
-				//printf("Could not create index file\r\n");
 			}
 
 			crypto_fr = f_open(&crypto_fp, PATH_ENTROPY_INDEX, FA_READ);
 		}
 
 		if (crypto_fr == FR_OK) {
-			//printf("Opened entropy index file\r\n");
 			UINT read = 0;
 			crypto_fr = f_read(&crypto_fp, crypto_fb, sizeof(entropy_index), &read);
 			f_close(&crypto_fp);
 			if (crypto_fr == FR_OK && read == sizeof(entropy_index)) {
 				memcpy(&entropy_index, crypto_fb, sizeof(entropy_index));
-				//printf("Entropy index is now: %lX\r\n", entropy_index);
 				return true;
 			}
-		} else {
-			//printf("Error opening entropy index file\r\n");
 		}
-
 	}
 
 	f_close(&crypto_fp);
@@ -148,15 +143,8 @@ bool load_entropy(void) {
 			crypto_fr = f_open(&crypto_fp, PATH_ENTROPY_SOURCE, FA_READ);
 			if (crypto_fr == FR_OK) {
 				uint32_t fsize = f_size(&crypto_fp);
-				//uint32_t fpoint = crypto_fp.fptr;
-
-				//printf("Opened entropy file\r\n\tSize is %lu\r\n\tPointer is at %lX \r\n\tSeeking to index: %lX\r\n", fsize, fpoint, entropy_index);
-
+				
 				crypto_fr = f_lseek(&crypto_fp, entropy_index);
-
-				//fpoint = crypto_fp.fptr;
-				//printf("After seek, pointer is now at %lX\r\n", fpoint);
-
 				if (crypto_fr == FR_OK && crypto_fp.fptr < fsize-sizeof(entropy)) {
 					UINT read = 0;
 					crypto_fr = f_read(&crypto_fp, crypto_fb, sizeof(entropy), &read);
@@ -164,18 +152,14 @@ bool load_entropy(void) {
 
 					if (crypto_fr == FR_OK) {
 						memcpy(&entropy, crypto_fb, sizeof(entropy));
-						//printf("Read entropy from SD: %lX\r\n", entropy);
 						srandom(entropy);
 						entropy_loaded = true;
 						ivs_generated = 0;
 						return true;
-					} else {
-						//printf("Could not read entropy data from SD\r\n");
 					}
 
 				} else {
 					f_close(&crypto_fp);
-					//printf("Could not seek in index file, entropy exhausted\r\n");
 					LED_indicate_error_crypto();
 				}
 			}
@@ -190,45 +174,29 @@ bool load_key(void) {
 	if (sd_mounted()) {
 		crypto_fr = f_open(&crypto_fp, PATH_AES_128_KEY, FA_READ);
 		if (crypto_fr == FR_OK) {
-			//printf("File open\r\n");
 			UINT read = 0;
 			crypto_fr = f_read(&crypto_fp, crypto_fb, CRYPTO_KEY_SIZE, &read);
 			f_close(&crypto_fp);
 
 			if (crypto_fr == FR_OK && read == CRYPTO_KEY_SIZE) {
-				//printf("Loaded AES-128 Key: ");
 				for (uint8_t i = 0; i < 16; i++) {
 					active_key[i] = crypto_fb[i];
-					//printf("%X ", crypto_fb[i]);
 				}
-				//printf("\r\n");	
+
 				return true;
-			} else {
-				//printf("Error %d reading file, read %d bytes.\r\n", crypto_fr, read);
 			}
-		} else {
-			//printf("Could not open file\r\n");
 		}
-	} else {
-		//printf("SD not mounted\r\n");
 	}
 
 	return false;
 }
 
-bool generate_iv(void) {
+bool crypto_generate_iv(void) {
 	if (entropy_loaded) {
 		for (uint8_t i = 0; i < 16; i++) {
 			active_iv[i] = (uint8_t)random();
 		}
 		ivs_generated++;
-
-		// TODO: remove
-		/*printf("Generated IV: ");
-		for (uint8_t i = 0; i < 16; i++) {
-			printf("%X ", active_iv[i]);
-		}
-		printf("\r\n");*/
 
 		if (ivs_generated >= MAX_IVS_PER_ENTROPY_BLOCK) {
 			load_entropy();
@@ -240,24 +208,12 @@ bool generate_iv(void) {
 	}
 }
 
-// TODO: Remove this
-void crypto_test(void) {
-	generate_iv();
+uint8_t *crypto_get_iv(void) {
+	return active_iv;
+}
 
-	uint8_t work_block[16];
-	memset(work_block, 0x70, 16);
-	work_block[15] = 0x00;
-
-	//printf("Work block plaintext:  ===%s===\r\n", work_block);
-	
-	crypto_prepare(active_key, active_iv);
-	crypto_encrypt_block(work_block);
-	//printf("Work block ciphertext: ===%s===\r\n", work_block);
-
-	crypto_prepare(active_key, active_iv);
-	crypto_decrypt_block(work_block);
-	printf("Work block plaintext:  ===%s===\r\n", work_block);
-
+void crypto_set_iv_from_workblock(void) {
+	memcpy(active_iv, crypto_work_block, CRYPTO_KEY_SIZE);
 }
 
 // TODO: test entropy exhaustion

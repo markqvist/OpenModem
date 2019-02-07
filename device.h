@@ -37,7 +37,9 @@
 #define CONFIG_CSMA_P 255
 
 #define AX25_MIN_FRAME_LEN 1
-#define AX25_MAX_FRAME_LEN 600
+#define AX25_MAX_FRAME_LEN 611
+// TODO: increase back to 576
+#define AX25_MAX_PAYLOAD   576
 
 // Packet settings
 #define CONFIG_PASSALL false
