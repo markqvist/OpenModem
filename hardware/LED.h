@@ -19,4 +19,6 @@ void LED_COM_ON(void);
 void LED_COM_OFF(void);
 void update_led_status(void);
 
+void LED_indicate_error_crypto(void);
+
 #endif

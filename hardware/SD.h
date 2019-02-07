@@ -23,4 +23,6 @@ void sd_automount(void);
 void sd_autounmount(void);
 void sd_statuschange_indication(uint8_t pattern);
 
+bool sd_mounted(void);
+
 #endif

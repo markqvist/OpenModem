@@ -1,4 +1,5 @@
 #include "SD.h"
+#include "hardware/Crypto.h"
 
 FATFS sdfs;
 
@@ -24,6 +25,7 @@ void sd_init(void) {
 
 void sd_automounted_hook(void) {
     sd_statuschange_indication(1);
+    crypto_init();
 }
 
 void sd_autounmounted_hook(void) {

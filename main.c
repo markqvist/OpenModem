@@ -70,7 +70,6 @@ void init(void) {
     ax25_init(&AX25, &modem, &modem.fd, ax25_callback);
     kiss_init(&AX25, &modem, &serial);
     sd_init();
-    crypto_init();
     bluetooth_init();
     gps_init(&serial);
     usrio_init();

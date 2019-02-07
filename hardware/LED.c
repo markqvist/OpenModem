@@ -53,3 +53,14 @@ void update_led_status(void) {
         led_status_ticks++;
     }
 }
+
+void LED_indicate_error_crypto(void) {
+    while (true) {
+        LED_COM_ON();
+        LED_STATUS_OFF();
+        delay_ms(500);
+        LED_COM_OFF();
+        LED_STATUS_ON();
+        delay_ms(500);
+    }
+}
