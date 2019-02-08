@@ -7,10 +7,14 @@
 #include "device.h"
 #include "hardware/crypto/MD5.h"
 #include "hardware/AFSK.h"
+#include "hardware/Serial.h"
+#include "hardware/VREF.h"
+#include "protocol/KISS.h"
 
 
 void config_init(void) {
 	config_source = CONFIG_SOURCE_NONE;
+	config_output_diagnostics = false;
 
 	bool has_valid_eeprom_config = config_validate_eeprom();
 
@@ -20,6 +24,28 @@ void config_init(void) {
 		config_load_defaults();
 		config_save_to_eeprom();
 	}
+
+	config_apply();
+}
+
+void config_apply(void) {
+	if (config_serial_baudrate == CONFIG_BAUDRATE_1200) serial_setbaudrate_1200(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_2400) serial_setbaudrate_2400(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_4800) serial_setbaudrate_4800(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_9600) serial_setbaudrate_9600(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_14400) serial_setbaudrate_14400(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_19200) serial_setbaudrate_19200(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_28800) serial_setbaudrate_28800(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_38400) serial_setbaudrate_38400(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_57600) serial_setbaudrate_57600(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_76800) serial_setbaudrate_76800(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_115200) serial_setbaudrate_115200(0);
+	if (config_serial_baudrate == CONFIG_BAUDRATE_230400) serial_setbaudrate_230400(0);
+}
+
+void config_save(void) {
+	config_save_to_eeprom();
+	config_save_to_sd();
 }
 
 void config_wipe_eeprom(void) {
@@ -133,21 +159,6 @@ void config_load_from_eeprom(void) {
 	config_gps_mode = config_data[ADDR_E_GPS_MODE];
 	config_bluetooth_mode = config_data[ADDR_E_BLUETOOTH_MODE];
 	config_serial_baudrate = config_data[ADDR_E_SERIAL_BAUDRATE];
-
-	// printf("Configuration loaded from EEPROM:\r\n");
-	// printf("\tP\t\t%02X\r\n", config_p);
-	// printf("\tSlottime\t%lu\r\n", config_slottime);
-	// printf("\tPreamble\t%lu\r\n", config_preamble);
-	// printf("\tTail\t\t%lu\r\n", config_tail);
-	// printf("\tLEDs\t\t%02X\r\n", config_led_intensity);
-	// printf("\tOut gain\t%02X\r\n", config_output_gain);
-	// printf("\tIn gain\t\t%02X\r\n", config_input_gain);
-	// printf("\tPassall\t\t%02X\r\n", config_passall);
-	// printf("\tLog pkts\t%02X\r\n", config_log_packets);
-	// printf("\tCrypto lock\t%02X\r\n", config_crypto_lock);
-	// printf("\tGPS mode\t%02X\r\n", config_gps_mode);
-	// printf("\tBT Mode\t\t%02X\r\n", config_bluetooth_mode);
-	// printf("\tBaudrate\t%02X\r\n", config_serial_baudrate);
 }
 
 bool config_validate_sd(void) {
@@ -171,9 +182,49 @@ void config_crypto_lock_enable(void) {
 
 void config_crypto_lock_disable(void) {
 	config_crypto_lock = false;
-	config_save_to_eeprom();
-	wdt_enable(WDTO_15MS);
-	while(true) { }
+	config_soft_reboot();
+}
+
+void config_set_serial_baudrate(uint8_t baudrate) {
+	if (baudrate >= CONFIG_BAUDRATE_1200 && baudrate <= CONFIG_BAUDRATE_230400) {
+		config_serial_baudrate = baudrate;
+	}
+}
+
+void config_set_output_gain(uint8_t gain) {
+	vref_setDAC(gain);
+}
+
+void config_set_input_gain(uint8_t gain) {
+	vref_setADC(0xFF - gain);
+}
+
+void config_set_passall(uint8_t passall) {
+	if (passall == 0x00) {
+		config_passall = false;
+	} else {
+		config_passall = true;
+	}
+}
+
+void config_set_log_packets(uint8_t log_packets) {
+	if (log_packets == 0x00) {
+		config_log_packets = false;
+	} else {
+		config_log_packets = true;
+	}
+}
+
+void config_set_gps_mode(uint8_t mode) {
+	if (mode == CONFIG_GPS_OFF) config_gps_mode = CONFIG_GPS_OFF;
+	if (mode == CONFIG_GPS_AUTODETECT) config_gps_mode = CONFIG_GPS_AUTODETECT;
+	if (mode == CONFIG_GPS_REQUIRED) config_gps_mode = CONFIG_GPS_REQUIRED;
+}
+
+void config_set_bt_mode(uint8_t mode) {
+	if (mode == CONFIG_BLUETOOTH_OFF) config_bluetooth_mode = CONFIG_BLUETOOTH_OFF;
+	if (mode == CONFIG_BLUETOOTH_AUTODETECT) config_bluetooth_mode = CONFIG_BLUETOOTH_AUTODETECT;
+	if (mode == CONFIG_BLUETOOTH_REQUIRED) config_bluetooth_mode = CONFIG_BLUETOOTH_REQUIRED;
 }
 
 void EEPROM_writebyte(uint16_t addr, uint8_t data) {
@@ -219,4 +270,45 @@ void EEPROM_updatebyte(uint16_t addr, uint8_t data) {
 	if (byte != data) {
 		EEPROM_writebyte(addr, data);
 	}
+}
+
+void config_soft_reboot(void) {
+	config_save_to_eeprom();
+	wdt_enable(WDTO_15MS);
+	while(true) { }
+}
+
+void config_enable_diagnostics(void) {
+	config_output_diagnostics = true;
+}
+
+void config_disable_diagnostics(void) {
+	config_output_diagnostics = false;
+}
+
+// TODO: remove this
+void config_print(void) {
+	uint8_t config_size = ADDR_E_END;
+	uint8_t config_data[config_size];
+
+	for (uint16_t addr = 0; addr < config_size; addr++) {
+		config_data[addr] = EEPROM_readbyte(addr);
+	}
+
+	kiss_output_config(config_data, config_size);
+
+	// printf(PSTR("Running configuration:\r\n"));
+	// printf("\tP\t\t%02X\r\n", config_p);
+	// printf("\tSlottime\t%lu\r\n", config_slottime);
+	// printf("\tPreamble\t%lu\r\n", config_preamble);
+	// printf("\tTail\t\t%lu\r\n", config_tail);
+	// printf("\tLEDs\t\t%02X\r\n", config_led_intensity);
+	// printf("\tOut gain\t%02X\r\n", config_output_gain);
+	// printf("\tIn gain\t\t%02X\r\n", 0xFF - config_input_gain);
+	// printf("\tPassall\t\t%02X\r\n", config_passall);
+	// printf("\tLog pkts\t%02X\r\n", config_log_packets);
+	// printf("\tCrypto lock\t%02X\r\n", config_crypto_lock);
+	// printf("\tGPS mode\t%02X\r\n", config_gps_mode);
+	// printf("\tBT Mode\t\t%02X\r\n", config_bluetooth_mode);
+	// printf("\tBaudrate\t%02X\r\n", config_serial_baudrate);
 }

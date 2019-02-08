@@ -1,9 +1,10 @@
 #include "LED.h"
 #include "util/time.h"
+#include "util/Config.h"
 
 bool LED_softblock_enabled = false;
 
-uint8_t ledIntensity = CONFIG_LED_INTENSITY;
+//uint8_t ledIntensity = CONFIG_LED_INTENSITY;
 ticks_t led_status_ticks_top = 0;
 ticks_t led_status_ticks = 0;
 ticks_t com_led_timeout = 0;
@@ -27,7 +28,7 @@ void LED_init(void) {
 
     TCCR0B = _BV(CS00);
 
-    OCR0A = ledIntensity;
+    OCR0A = config_led_intensity;
 }
 
 void LED_softblock_on(void) {
@@ -39,8 +40,8 @@ void LED_softblock_off(void) {
 }
 
 void LED_setIntensity(uint8_t value) {
-	ledIntensity = value;
-	OCR0A = ledIntensity;
+	config_led_intensity = value;
+	OCR0A = config_led_intensity;
 }
 
 void LED_COM_ON(void) {

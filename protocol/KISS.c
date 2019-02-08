@@ -26,7 +26,10 @@ size_t packet_lengths_buf[CONFIG_QUEUE_MAX_LENGTH+1];
 AX25Ctx *ax25ctx;
 Afsk *channel;
 Serial *serial;
+
 volatile ticks_t last_serial_read = 0;
+extern volatile int8_t afsk_peak;
+
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
@@ -283,9 +286,6 @@ void kiss_serialCallback(uint8_t sbyte) {
     } else if (IN_FRAME && frame_len < AX25_MAX_PAYLOAD) {
         // Have a look at the command byte first
         if (frame_len == 0 && command == CMD_UNKNOWN) {
-            // OpenModem supports only one HDLC port, so we
-            // strip off the port nibble of the command byte
-            sbyte = sbyte & 0x0F;
             command = sbyte;
             if (command == CMD_DATA) current_packet_start = queue_cursor;
         } else if (command == CMD_DATA) {
@@ -311,6 +311,12 @@ void kiss_serialCallback(uint8_t sbyte) {
             config_slottime = sbyte * 10UL;
         } else if (command == CMD_P) {
             config_p = sbyte;
+        } else if (command == CMD_SAVE_CONFIG) {
+            config_save();
+        } else if (command == CMD_REBOOT) {
+            if (sbyte == CMD_REBOOT_CONFIRM) {
+                config_soft_reboot();
+            }
         } else if (command == CMD_LED_INTENSITY) {
             if (sbyte == FESC) {
                 ESCAPE = true;
@@ -320,9 +326,114 @@ void kiss_serialCallback(uint8_t sbyte) {
                     if (sbyte == TFESC) sbyte = FESC;
                     ESCAPE = false;
                 }
-                LED_setIntensity(sbyte);   
+                LED_setIntensity(sbyte);
+            }
+        } else if (command == CMD_OUTPUT_GAIN) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_output_gain(sbyte);
+            }
+        } else if (command == CMD_INPUT_GAIN) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_input_gain(sbyte);
+            }
+        } else if (command == CMD_PASSALL) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_passall(sbyte);
+            }
+        } else if (command == CMD_LOG_PACKETS) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_log_packets(sbyte);
+            }
+        } else if (command == CMD_GPS_MODE) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_gps_mode(sbyte);
+            }
+        } else if (command == CMD_BT_MODE) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_bt_mode(sbyte);
+            }
+        } else if (command == CMD_SERIAL_BAUDRATE) {
+            config_set_serial_baudrate(sbyte);
+        // TODO: Remove this
+        } else if (command == CMD_PRINT_CONFIG) {
+            config_print();
+        } else if (command == CMD_AUDIO_PEAK) {
+            if (sbyte == 0x01) {
+                kiss_output_afsk_peak();
+            }
+        }  else if (command == CMD_ENABLE_DIAGNOSTICS) {
+            if (sbyte == 0x00) {
+                config_disable_diagnostics();
+            } else {
+                config_enable_diagnostics();
             }
         }
         
     }
+}
+
+void kiss_output_afsk_peak(void) {
+    fputc(FEND, &serial->uart0);
+    fputc(CMD_AUDIO_PEAK, &serial->uart0);
+    uint8_t b = afsk_peak;
+
+    if (b == FEND) {
+        fputc(FESC, &serial->uart0);
+        fputc(TFEND, &serial->uart0);
+    } else if (b == FESC) {
+        fputc(FESC, &serial->uart0);
+        fputc(TFESC, &serial->uart0);
+    } else {
+        fputc(b, &serial->uart0);
+    }
+
+    fputc(FEND, &serial->uart0);
+}
+
+void kiss_output_config(uint8_t* data, size_t length) {
+    fputc(FEND, &serial->uart0);
+    fputc(CMD_PRINT_CONFIG, &serial->uart0);
+    for (unsigned i = 0; i < length; i++) {
+        uint8_t b = data[i];
+        if (b == FEND) {
+            fputc(FESC, &serial->uart0);
+            fputc(TFEND, &serial->uart0);
+        } else if (b == FESC) {
+            fputc(FESC, &serial->uart0);
+            fputc(TFESC, &serial->uart0);
+        } else {
+            fputc(b, &serial->uart0);
+        }
+    }
+    fputc(FEND, &serial->uart0);
 }

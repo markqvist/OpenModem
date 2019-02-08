@@ -12,6 +12,9 @@ bool hw_afsk_dac_isr = false;
 bool hw_5v_ref = false;
 Afsk *AFSK_modem;
 
+int8_t afsk_peak = 0;
+uint16_t peak_ticks = 0;
+
 // Forward declerations
 int afsk_getchar(FILE *strem);
 int afsk_putchar(char c, FILE *stream);
@@ -376,8 +379,21 @@ static bool hdlcParse(Hdlc *hdlc, bool bit, FIFOBuffer *fifo) {
     return ret;
 }
 
-
+#define AFSK_PEAK_DECAY 96
 void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
+    if (config_output_diagnostics) {
+        peak_ticks++;
+        if (currentSample > afsk_peak) {
+            afsk_peak = currentSample;
+        } else {
+            if (peak_ticks >= AFSK_PEAK_DECAY) {
+                peak_ticks = 0;
+                if (afsk_peak > 0) {
+                    afsk_peak--;
+                }
+            }
+        }
+    }
     // To determine the received frequency, and thereby
     // the bit of the sample, we multiply the sample by
     // a sample delayed by (samples per bit / 2).

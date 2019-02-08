@@ -19,10 +19,21 @@
 #define CMD_TXTAIL 0x04
 #define CMD_FULLDUPLEX 0x05
 #define CMD_SETHARDWARE 0x06
-#define CMD_FLUSHQUEUE 0x07
-#define CMD_FLUSHQUEUE_DEBUG 0x08
-#define CMD_LED_INTENSITY 0x09
+#define CMD_SAVE_CONFIG 0x07
+#define CMD_LED_INTENSITY 0x08
+#define CMD_OUTPUT_GAIN 0x09
+#define CMD_INPUT_GAIN 0x0A
+#define CMD_PASSALL 0x0B
+#define CMD_LOG_PACKETS 0x0C
+#define CMD_GPS_MODE 0x0D
+#define CMD_BT_MODE	0x0E
 #define CMD_READY 0x0F
+#define CMD_SERIAL_BAUDRATE 0x10
+#define CMD_REBOOT 0x11
+#define CMD_REBOOT_CONFIRM 0x9A
+#define CMD_AUDIO_PEAK 0x12
+#define CMD_ENABLE_DIAGNOSTICS 0x13
+#define CMD_PRINT_CONFIG 0xF0
 #define CMD_RETURN 0xFF
 
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser);
@@ -31,5 +42,8 @@ void kiss_serialCallback(uint8_t sbyte);
 void kiss_flushQueue(void);
 void kiss_csma(void);
 void kiss_poll(void);
+
+void kiss_output_config(uint8_t* data, size_t length);
+void kiss_output_afsk_peak(void);
 
 #endif

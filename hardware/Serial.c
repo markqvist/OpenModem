@@ -1,6 +1,7 @@
 #include "Serial.h"
 #include <stdio.h>
 #include <string.h>
+#include "util/Config.h"
 
 extern volatile uint8_t queue_height;
 
@@ -8,7 +9,7 @@ void serial_init(Serial *serial) {
     memset(serial, 0, sizeof(*serial));
     memset(uart0Buf, 0, sizeof(uart0Buf));
     memset(uart1Buf, 0, sizeof(uart1Buf));
-
+    
     serial_setbaudrate_115200(0);
     serial_setbaudrate_115200(1);
 
@@ -27,6 +28,7 @@ void serial_init(Serial *serial) {
 
     fifo_init(&uart0FIFO, uart0Buf, sizeof(uart0Buf));
     fifo_init(&uart1FIFO, uart1Buf, sizeof(uart1Buf));
+
 }
 
 bool serial_available(uint8_t index) {

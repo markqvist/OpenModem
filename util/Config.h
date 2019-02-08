@@ -69,7 +69,11 @@ uint8_t config_gps_mode;
 uint8_t config_bluetooth_mode;
 uint8_t config_serial_baudrate;
 
+bool config_output_diagnostics;
+
 void config_init(void);
+void config_apply(void);
+void config_save(void);
 
 bool config_validate_eeprom(void);
 bool config_validate_sd(void);
@@ -84,6 +88,20 @@ void config_load_from_sd(void);
 
 void config_crypto_lock_enable(void);
 void config_crypto_lock_disable(void);
+
+void config_set_serial_baudrate(uint8_t baudrate);
+void config_set_output_gain(uint8_t gain);
+void config_set_input_gain(uint8_t gain);
+void config_set_passall(uint8_t passall);
+void config_set_log_packets(uint8_t log_packets);
+void config_set_gps_mode(uint8_t mode);
+void config_set_bt_mode(uint8_t mode);
+
+void config_enable_diagnostics(void);
+void config_disable_diagnostics(void);
+
+void config_soft_reboot(void);
+void config_print(void);
 
 void EEPROM_updatebyte(uint16_t addr, uint8_t data);
 uint8_t EEPROM_readbyte(uint16_t addr);
