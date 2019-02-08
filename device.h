@@ -41,10 +41,11 @@
 #define CONFIG_CSMA_P_DEFAULT 255
 #define CONFIG_CSMA_SLOTTIME_DEFAULT 20
 
-#define AX25_MIN_FRAME_LEN 1
+#define AX25_MIN_FRAME_LEN 4
 #define AX25_MAX_FRAME_LEN 611
-// TODO: increase back to 576
 #define AX25_MAX_PAYLOAD   576
+#define AX25_MIN_PAYLOAD   2
+#define AX25_ENCRYPTED_MIN_LENGTH 51 // Padding byte + IV + 1 Block + HMAC + CRC
 
 // Packet settings
 #define CONFIG_PASSALL false
