@@ -3,6 +3,10 @@
 #ifndef DEVICE_CONFIGURATION
 #define DEVICE_CONFIGURATION
 
+// Version info
+#define MAJ_VERSION  0x01
+#define MIN_VERSION  0x00
+
 // CPU settings
 #define TARGET_CPU m1284p
 #define F_CPU 20000000UL
@@ -10,12 +14,12 @@
 
 // Voltage references
 // TODO: Determine best defaults
-#define CONFIG_ADC_REF 255
+#define CONFIG_ADC_REF 128
 #define CONFIG_DAC_REF 128
 
 // TODO: Change this back to default
-#define CONFIG_LED_INTENSITY 35
 //#define CONFIG_LED_INTENSITY 192
+#define CONFIG_LED_INTENSITY 37
 #define CONFIG_COM_LED_TIMEOUT_MS 40
 #define CONFIG_LED_UPDATE_INTERVAL_MS 40
 
@@ -34,7 +38,8 @@
 
 // CSMA Settings
 #define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx
-#define CONFIG_CSMA_P 255
+#define CONFIG_CSMA_P_DEFAULT 255
+#define CONFIG_CSMA_SLOTTIME_DEFAULT 20
 
 #define AX25_MIN_FRAME_LEN 1
 #define AX25_MAX_FRAME_LEN 611

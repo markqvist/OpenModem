@@ -2,6 +2,7 @@
 #include <avr/io.h>
 #include <avr/wdt.h>
 #include <avr/pgmspace.h>
+#include <util/atomic.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -18,10 +19,9 @@
 #include "hardware/GPS.h"
 #include "protocol/AX25.h"
 #include "protocol/KISS.h"
+#include "util/Config.h"
 #include "util/time.h"
 #include "util/FIFO.h"
-
-
 
 uint8_t boot_vector = 0x00;
 uint8_t OPTIBOOT_MCUSR __attribute__ ((section(".noinit")));
@@ -39,6 +39,7 @@ static void ax25_callback(struct AX25Ctx *ctx) {
 }
 
 void system_check(void) {
+    // Check boot vector
     if (OPTIBOOT_MCUSR & (1<<PORF)) {
       boot_vector = START_FROM_POWERON;
     } else if (OPTIBOOT_MCUSR & (1<<BORF)) {
@@ -54,15 +55,29 @@ void system_check(void) {
         }
     }
 
+    // If encryption was previously enabled, require
+    // it to be initialised to start system.
+    if (config_crypto_lock) {
+        if (!crypto_wait()) {
+            // If initialising crypto times out,
+            // halt system and display error signal
+            LED_indicate_error_crypto();
+        }
+    }
+
+    // Give the green light if everything checks out
     LED_STATUS_ON();
 }
 
 void init(void) {
+
     sei();
 
     serial_init(&serial);    
     stdout = &serial.uart0;
     stdin  = &serial.uart0;
+
+    config_init();
 
     VREF_init();
     LED_init();

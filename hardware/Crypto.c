@@ -1,4 +1,5 @@
 #include "Crypto.h"
+#include "util/Config.h"
 
 bool encryption_enabled = false;
 uint8_t active_key[CRYPTO_KEY_SIZE];
@@ -18,17 +19,39 @@ FRESULT crypto_fr;					// Result codes
 void crypto_init(void) {
 	encryption_enabled = false;
 
-	if (load_key()) {
-		if (load_entropy_index() && load_entropy()) {
-			encryption_enabled = true;
+	if (should_disable_enryption()) {
+		if (config_crypto_lock) config_crypto_lock_disable();
+	} else {
+		if (load_key()) {
+			if (load_entropy_index() && load_entropy()) {
+				config_crypto_lock_enable();
+				encryption_enabled = true;
+			}
+		}
+
+		if (config_crypto_lock) {
+			if (encryption_enabled) {
+				LED_indicate_enabled_crypto();
+			} else {
+				LED_indicate_error_crypto();
+			}
 		}
 	}
+}
 
-	if (encryption_enabled) {
-		LED_indicate_enabled_crypto();
-	} else {
-		LED_indicate_error_crypto();
+bool crypto_wait(void) {
+	size_t wait_timer = 0;
+	size_t interval_ms = 100;
+	while (!crypto_enabled()) {
+	    delay_ms(100);
+	    wait_timer++;
+	    sd_jobs();
+	    if (wait_timer*interval_ms > CRYPTO_WAIT_TIMEOUT_MS) {
+	    	return false;
+	    }
 	}
+
+	return true;
 }
 
 void crypto_generate_hmac(uint8_t *data, size_t length) {
@@ -167,6 +190,19 @@ bool load_entropy(void) {
 	}
 
 	f_close(&crypto_fp);
+	return false;
+}
+
+bool should_disable_enryption(void) {
+	if (sd_mounted()) {
+		crypto_fr = f_open(&crypto_fp, PATH_CRYPTO_DISABLE, FA_READ);
+		if (crypto_fr == FR_OK) {
+			f_close(&crypto_fp);
+
+			return true;
+		}
+	}
+
 	return false;
 }
 

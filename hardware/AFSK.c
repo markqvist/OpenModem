@@ -4,16 +4,9 @@
 #include "hardware/LED.h"
 #include "protocol/KISS.h"
 #include "hardware/SD.h"
-
-// TODO: Remove testing vars ////
-#define SAMPLES_TO_CAPTURE 128
-ticks_t capturedsamples = 0;
-uint8_t samplebuf[SAMPLES_TO_CAPTURE];
-/////////////////////////////////
+#include "util/Config.h"
 
 extern volatile ticks_t _clock;
-extern unsigned long custom_preamble;
-extern unsigned long custom_tail;
 
 bool hw_afsk_dac_isr = false;
 bool hw_5v_ref = false;
@@ -128,11 +121,11 @@ static void AFSK_txStart(Afsk *afsk) {
         afsk->sending = true;
         afsk->sending_data = true;
         LED_TX_ON();
-        afsk->preambleLength = DIV_ROUND(custom_preamble * BITRATE, 8000);
+        afsk->preambleLength = DIV_ROUND(config_preamble * BITRATE, 8000);
         AFSK_DAC_IRQ_START();
     }
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
-      afsk->tailLength = DIV_ROUND(custom_tail * BITRATE, 8000);
+      afsk->tailLength = DIV_ROUND(config_tail * BITRATE, 8000);
     }
 }
 
@@ -468,50 +461,12 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
         #error No filters defined for specified samplerate!
     #endif
 
-    // We put the sampled bit in a delay-line:
-    // First we bitshift everything 1 left
     afsk->sampledBits <<= 1;
 
-    // And then add the sampled bit to our delay line
     afsk->sampledBits |= (afsk->iirY[1] > 0) ? 0 : 1;
-    //afsk->sampledBits |= (freq_disc > 0) ? 0 : 1;
 
-    // Put the current raw sample in the delay FIFO
     fifo_push(&afsk->delayFifo, currentSample);
 
-    // We need to check whether there is a signal transition.
-    // If there is, we can recalibrate the phase of our 
-    // sampler to stay in sync with the transmitter. A bit of
-    // explanation is required to understand how this works.
-    // Since we have PHASE_MAX/PHASE_BITS = 8 samples per bit,
-    // we employ a phase counter (currentPhase), that increments
-    // by PHASE_BITS everytime a sample is captured. When this
-    // counter reaches PHASE_MAX, it wraps around by modulus
-    // PHASE_MAX. We then look at the last three samples we
-    // captured and determine if the bit was a one or a zero.
-    //
-    // This gives us a "window" looking into the stream of
-    // samples coming from the ADC. Sort of like this:
-    //
-    //   Past                                      Future
-    //       0000000011111111000000001111111100000000
-    //                   |________|
-    //                       ||     
-    //                     Window
-    //
-    // Every time we detect a signal transition, we adjust
-    // where this window is positioned a little. How much we
-    // adjust it is defined by PHASE_INC. If our current phase
-    // phase counter value is less than half of PHASE_MAX (ie, 
-    // the window size) when a signal transition is detected,
-    // add PHASE_INC to our phase counter, effectively moving
-    // the window a little bit backward (to the left in the
-    // illustration), inversely, if the phase counter is greater
-    // than half of PHASE_MAX, we move it forward a little.
-    // This way, our "window" is constantly seeking to position
-    // it's center at the bit transitions. Thus, we synchronise
-    // our timing to the transmitter, even if it's timing is
-    // a little off compared to our own.
     if (SIGNAL_TRANSITIONED(afsk->sampledBits)) {
         if (afsk->currentPhase < PHASE_THRESHOLD) {
             afsk->currentPhase += PHASE_INC;
@@ -523,24 +478,12 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
         afsk->silentSamples++;
     }
 
-    // We increment our phase counter
     afsk->currentPhase += PHASE_BITS;
 
-    // Check if we have reached the end of
-    // our sampling window.
     if (afsk->currentPhase >= PHASE_MAX) {
-        // If we have, wrap around our phase
-        // counter by modulus
         afsk->currentPhase %= PHASE_MAX;
 
-        // Bitshift to make room for the next
-        // bit in our stream of demodulated bits
         afsk->actualBits <<= 1;
-
-        // We determine the actual bit value by reading
-        // the last 3 sampled bits. If there is two or
-        // more 1's, we will assume that the transmitter
-        // sent us a one, otherwise we assume a zero
         
         uint8_t bits = afsk->sampledBits & 0x07;
         if (bits == 0x07 || // 111
@@ -550,39 +493,6 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             ) {
             afsk->actualBits |= 1;
         }
-
-
-        //// Alternative using six bits ////////////////
-        // uint8_t bits = afsk->sampledBits & 0x3F;
-        // uint8_t c = 0;
-        // c += bits & _BV(0);
-        // c += bits & _BV(1);
-        // c += bits & _BV(2);
-        // c += bits & _BV(3);
-        // c += bits & _BV(4);
-        // c += bits & _BV(5);
-        // if (c >= 3) afsk->actualBits |= 1;
-        /////////////////////////////////////////////////
-
-        // Now we can pass the actual bit to the HDLC parser.
-        // We are using NRZ-S coding, so if 2 consecutive bits
-        // have the same value, we have a 1, otherwise a 0.
-        // We use the TRANSITION_FOUND function to determine this.
-        //
-        // This is smart in combination with bit stuffing,
-        // since it ensures a transmitter will never send more
-        // than five consecutive 1's. When sending consecutive
-        // ones, the signal stays at the same level, and if
-        // this happens for longer periods of time, we would
-        // not be able to synchronize our phase to the transmitter
-        // and would start experiencing "bit slip".
-        //
-        // By combining bit-stuffing with NRZ-S coding, we ensure
-        // that the signal will regularly make transitions
-        // that we can use to synchronize our phase.
-        //
-        // We also check the return of the Link Control parser
-        // to check if an error occured.
 
         if (!hdlcParse(&afsk->hdlc, !TRANSITION_FOUND(afsk->actualBits), &afsk->rxFifo)) {
             afsk->status |= 1;

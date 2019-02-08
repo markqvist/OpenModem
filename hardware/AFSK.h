@@ -36,7 +36,6 @@ inline static uint8_t sinSample(uint16_t i) {
 #define TRANSITION_FOUND(bits) BITS_DIFFER((bits), (bits) >> 1)
 #define DUAL_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x03) == 0x03)
 #define QUAD_XOR(bits1, bits2) ((((bits1)^(bits2)) & 0x0F) == 0x0F)
-
 #define CPU_FREQ F_CPU
 
 

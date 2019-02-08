@@ -1,7 +1,5 @@
 #include "VREF.h"
-
-uint8_t adcReference = CONFIG_ADC_REF;
-uint8_t dacReference = CONFIG_DAC_REF;
+#include "util/Config.h"
 
 void VREF_init(void) {
     // Enable output for OC2A and OC2B (PD7 and PD6)
@@ -14,17 +12,17 @@ void VREF_init(void) {
 
     TCCR2B = _BV(CS20);
 
-    OCR2A = adcReference;
-    OCR2B = dacReference;
+    OCR2A = config_input_gain;
+    OCR2B = config_output_gain;
 }
 
 
 void vref_setADC(uint8_t value) {
-	adcReference = value;
-	OCR2A = adcReference;
+	config_input_gain = value;
+	OCR2A = config_input_gain;
 }
 
 void vref_setDAC(uint8_t value) {
-	dacReference = value;
-	OCR2B = dacReference;
+	config_output_gain = value;
+	OCR2B = config_output_gain;
 }

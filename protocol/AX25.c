@@ -7,6 +7,7 @@
 #include "util/CRC-CCIT.h"
 #include "hardware/AFSK.h"
 #include "protocol/KISS.h"
+#include "util/Config.h"
 
 #define countof(a) sizeof(a)/sizeof(a[0])
 #define MIN(a,b) ({ typeof(a) _a = (a); typeof(b) _b = (b); ((typeof(_a))((_a < _b) ? _a : _b)); })
@@ -32,7 +33,7 @@ void ax25_poll(AX25Ctx *ctx) {
     while ((c = fgetc(ctx->ch)) != EOF) {
         if (!ctx->escape && c == HDLC_FLAG) {
             if (ctx->frame_len >= AX25_MIN_FRAME_LEN) {
-                if (ctx->crc_in == AX25_CRC_CORRECT || CONFIG_PASSALL) {
+                if (ctx->crc_in == AX25_CRC_CORRECT || config_passall) {
                     ax25_decode(ctx);
                 }
             }

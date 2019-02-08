@@ -7,6 +7,7 @@
 #include "hardware/Crypto.h"
 #include "util/FIFO16.h"
 #include "util/time.h"
+#include "util/Config.h"
 #include "KISS.h"
 
 uint8_t packet_queue[CONFIG_QUEUE_SIZE];
@@ -31,11 +32,10 @@ bool IN_FRAME;
 bool ESCAPE;
 
 uint8_t command = CMD_UNKNOWN;
-unsigned long custom_preamble = CONFIG_AFSK_PREAMBLE_LEN;
-unsigned long custom_tail = CONFIG_AFSK_TRAILER_LEN;
 
-unsigned long slotTime = 200;
-uint8_t p = CONFIG_CSMA_P;
+//unsigned long custom_preamble = CONFIG_AFSK_PREAMBLE_LEN;
+//unsigned long custom_tail = CONFIG_AFSK_TRAILER_LEN;
+
 
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     ax25ctx = ax25;
@@ -89,6 +89,7 @@ void kiss_messageCallback(AX25Ctx *ctx) {
             for (uint8_t i = 0; i < CRYPTO_HMAC_SIZE; i++) {
                 if (hmac[i] != crypto_work_block[i]) {
                     HMAC_ok = false;
+                    break;
                 }
             }
 
@@ -145,7 +146,7 @@ void kiss_csma(void) {
             if (!channel->hdlc.dcd) {
                 ticks_t timeout = last_serial_read + ms_to_ticks(CONFIG_SERIAL_TIMEOUT_MS);
                 if (timer_clock() > timeout) {
-                    if (p == 255) {
+                    if (config_p == 255) {
                         kiss_flushQueue();
                     } else {
                         // TODO: Implement real CSMA
@@ -155,7 +156,7 @@ void kiss_csma(void) {
             }
         #else
             if (!channel->hdlc.dcd) {
-                if (p == 255) {
+                if (config_p == 255) {
                     kiss_flushQueue();
                 } else {
                     // TODO: Implement real CSMA
@@ -302,16 +303,14 @@ void kiss_serialCallback(uint8_t sbyte) {
                     if (queue_cursor == CONFIG_QUEUE_SIZE) queue_cursor = 0;
                 }
             }
-        } else if (command == CMD_TXDELAY) {
-            custom_preamble = sbyte * 10UL;
+        } else if (command == CMD_PREAMBLE) {
+            config_preamble = sbyte * 10UL;
         } else if (command == CMD_TXTAIL) {
-            custom_tail = sbyte * 10;
+            config_tail = sbyte * 10UL;
         } else if (command == CMD_SLOTTIME) {
-            slotTime = sbyte * 10;
+            config_slottime = sbyte * 10UL;
         } else if (command == CMD_P) {
-            p = sbyte;
-        } else if (command == CMD_FLUSHQUEUE) {
-            kiss_flushQueue();
+            config_p = sbyte;
         } else if (command == CMD_LED_INTENSITY) {
             if (sbyte == FESC) {
                 ESCAPE = true;
