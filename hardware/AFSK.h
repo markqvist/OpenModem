@@ -129,20 +129,15 @@ inline static uint8_t sinSample(uint16_t i) {
     #define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
     #define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
 #endif
-         
-// TODO: Revamp filtering              
+
 #if BITRATE == 1200
     #define FILTER_CUTOFF 500
     #define MARK_FREQ  1200
     #define SPACE_FREQ 2200
 #elif BITRATE == 2400
-    // TODO: Determine best filter cutoff
-    // #define FILTER_CUTOFF 772
     #define FILTER_CUTOFF 1000
     #define MARK_FREQ  2165
     #define SPACE_FREQ 3970
-    //#define MARK_FREQ  2200
-    //#define SPACE_FREQ 4000
 #elif BITRATE == 300
     #define FILTER_CUTOFF 500
     #define MARK_FREQ  1600

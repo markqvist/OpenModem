@@ -1,2 +1,2 @@
-OpenModem Dev Repo
+OpenModem
 ==========
