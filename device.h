@@ -13,13 +13,10 @@
 #define FREQUENCY_CORRECTION 0
 
 // Voltage references
-// TODO: Determine best defaults
 #define CONFIG_ADC_REF 128
-#define CONFIG_DAC_REF 128
+#define CONFIG_DAC_REF 255
 
-// TODO: Change this back to default
-//#define CONFIG_LED_INTENSITY 192
-#define CONFIG_LED_INTENSITY 37
+#define CONFIG_LED_INTENSITY 192
 #define CONFIG_COM_LED_TIMEOUT_MS 40
 #define CONFIG_LED_UPDATE_INTERVAL_MS 40
 
@@ -29,9 +26,9 @@
 // Serial settings
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 6000 // TODO: Optimise this by saving ram other places, add SD queue
+#define CONFIG_QUEUE_SIZE 6000
 #define CONFIG_QUEUE_MAX_LENGTH 15
-#define CONFIG_UART0_BUFFER_SIZE 1536 // TODO: Tune this, what is actually required?
+#define CONFIG_UART0_BUFFER_SIZE 1536
 #define CONFIG_UART1_BUFFER_SIZE 128
 #define CONFIG_SERIAL_TIMEOUT_MS 10
 #define CONFIG_BENCHMARK_MODE false
@@ -103,41 +100,3 @@
 #endif
 
 #endif
-
-/*
-PA0		ANALOG_IN
-PA1		USR_1
-PA2		USR_2
-PA3		USR_3 / BT_MODE		// TODO: Set as output
-PA4		USR_4 / BT_RTS		// TODO: Set as input
-PA5		GPS_EN				// TODO: Set as output/input
-PA6		SD_CS				// TODO: Set as output
-PA7		SD_DETECT			// TODO: Set as input and enable pullup
-
-PB0		LED_RX
-PB1		LED_TX
-PB2		LED_STATUS
-PB3		LED_DRAIN_PWM
-PB4		LED_COM / SPI_SS	(PGM)
-PB5		SPI_MOSI			SD/PGM
-PB6		SPI_MISO			SD/PGM
-PB7		SPI_CLK				SD/PGM
-
-PC0		DAC_0
-PC1		DAC_1
-PC2		DAC_2
-PC3		DAC_3
-PC4		DAC_4
-PC5		DAC_5
-PC6		DAC_6
-PC7		DAC_7
-
-PD0		UART0_RX
-PD1		UART0_TX
-PD2		UART1_RX		GPS
-PD3		UART1_TX		GPS
-PD4		PTT_NEG
-PD5		PTT_SIG
-PD6		REF_DAC
-PD7		REF_ADC
-*/

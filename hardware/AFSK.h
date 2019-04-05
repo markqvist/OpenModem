@@ -120,8 +120,8 @@ inline static uint8_t sinSample(uint16_t i) {
 #endif
 
 #if BITRATE == 300
-    #define DCD_TIMEOUT_SAMPLES 520
-    #define DCD_MIN_COUNT 2
+    #define DCD_TIMEOUT_SAMPLES 512
+    #define DCD_MIN_COUNT 4
 #elif BITRATE == 1200
     #define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
     #define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
@@ -177,7 +177,7 @@ typedef struct Afsk
     uint16_t phaseAcc;                      // Phase accumulator
     uint16_t phaseInc;                      // Phase increment per sample
 
-    uint16_t silentSamples;                 // How many samples were completely silent
+    uint16_t silentSamples;                 // How many samples were silent
 
     volatile bool sending;                  // Set when modem is sending
     volatile bool sending_data;             // Set when modem is sending data
@@ -208,7 +208,7 @@ typedef struct Afsk
     #else
         #error Not enough space in sampledBits variable!
     #endif
-    int16_t currentPhase;                    // Current phase of the demodulator
+    int16_t currentPhase;                   // Current phase of the demodulator
     uint8_t actualBits;                     // Actual found bits at correct bitrate
 
     volatile int status;                    // Status of the modem, 0 means OK

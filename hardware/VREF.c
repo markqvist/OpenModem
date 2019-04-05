@@ -19,7 +19,7 @@ void VREF_init(void) {
 
 void vref_setADC(uint8_t value) {
 	config_input_gain = value;
-	OCR2A = config_input_gain;
+	OCR2A = 0xFF - config_input_gain;
 }
 
 void vref_setDAC(uint8_t value) {

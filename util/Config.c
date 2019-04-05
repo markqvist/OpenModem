@@ -196,7 +196,7 @@ void config_set_output_gain(uint8_t gain) {
 }
 
 void config_set_input_gain(uint8_t gain) {
-	vref_setADC(0xFF - gain);
+	vref_setADC(gain);
 }
 
 void config_set_passall(uint8_t passall) {
