@@ -33,6 +33,7 @@
 #define CMD_REBOOT_CONFIRM 0x9A
 #define CMD_AUDIO_PEAK 0x12
 #define CMD_ENABLE_DIAGNOSTICS 0x13
+#define CMD_MODE 0x14
 #define CMD_PRINT_CONFIG 0xF0
 #define CMD_RETURN 0xFF
 
@@ -43,6 +44,7 @@ void kiss_flushQueue(void);
 void kiss_csma(void);
 void kiss_poll(void);
 
+void kiss_output_modem_mode(void);
 void kiss_output_config(uint8_t* data, size_t length);
 void kiss_output_afsk_peak(void);
 

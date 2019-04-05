@@ -400,6 +400,7 @@ void kiss_serialCallback(uint8_t sbyte) {
         // TODO: Remove this
         } else if (command == CMD_PRINT_CONFIG) {
             config_print();
+            kiss_output_modem_mode();
         } else if (command == CMD_AUDIO_PEAK) {
             if (sbyte == 0x01) {
                 kiss_output_afsk_peak();
@@ -410,9 +411,26 @@ void kiss_serialCallback(uint8_t sbyte) {
             } else {
                 config_enable_diagnostics();
             }
+        }  else if (command == CMD_MODE) {
+            if (sbyte == 0x00) {
+                kiss_output_modem_mode();
+            }
         }
         
     }
+}
+
+void kiss_output_modem_mode(void) {
+    fputc(FEND, &serial->uart0);
+    fputc(CMD_MODE, &serial->uart0);
+    if (BITRATE == 300) {
+        fputc(MODE_AFSK_300, &serial->uart0);
+    } else if (BITRATE == 1200) {
+        fputc(MODE_AFSK_1200, &serial->uart0);
+    } else if (BITRATE == 2400) {
+        fputc(MODE_AFSK_2400, &serial->uart0);
+    }
+    fputc(FEND, &serial->uart0);
 }
 
 void kiss_output_afsk_peak(void) {
