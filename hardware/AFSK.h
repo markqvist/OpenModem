@@ -39,10 +39,10 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 
-#define BITRATE 1200
+#define BITRATE 300
 
 #if BITRATE == 300
-    #define CONFIG_ADC_SAMPLERATE 9600UL
+    #define CONFIG_ADC_SAMPLERATE 4800UL
     #define CONFIG_DAC_SAMPLERATE 19200UL
     #define CLOCK_TICKS_PER_10_MS 96
 #elif BITRATE == 1200
@@ -80,7 +80,6 @@ inline static uint8_t sinSample(uint16_t i) {
 #define DAC_SAMPLESPERBIT (CONFIG_DAC_SAMPLERATE / BITRATE)
 #define DAC_TICKS_BETWEEN_SAMPLES ((((CPU_FREQ+FREQUENCY_CORRECTION)) / CONFIG_DAC_SAMPLERATE) - 1)
 
-// TODO: Maybe revert to only looking at two samples
 #if BITRATE == 300
     #define SIGNAL_TRANSITIONED(bits) DUAL_XOR((bits), (bits) >> 2)
 #elif BITRATE == 1200
@@ -94,34 +93,33 @@ inline static uint8_t sinSample(uint16_t i) {
 #endif
 
 #if BITRATE == 300
-    // TODO: Real-world tests on which resolution is best
-    //#define PHASE_BITS   8
-    #define PHASE_BITS   4
+    #define PHASE_BITS   1
 #else
     #define PHASE_BITS   8 // Sub-sample phase counter resolution
 #endif
 
 #define PHASE_INC    1                              // Nudge by above resolution for each adjustment
 
+
 #define PHASE_MAX    (ADC_SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
 
 // TODO: Test which target is best in real world
 // For 1200, this seems a little better
 #if BITRATE == 300
-    #define PHASE_THRESHOLD  (PHASE_MAX / 2)
+    #define PHASE_THRESHOLD (PHASE_MAX / 2)
 #elif BITRATE == 1200
     #if CONFIG_ADC_SAMPLERATE == 19200
         #define PHASE_THRESHOLD  (PHASE_MAX / 2)+3*PHASE_BITS  // Target transition point of our phase window
     #elif CONFIG_ADC_SAMPLERATE == 9600
-        #define PHASE_THRESHOLD  (PHASE_MAX / 2)            // 64   // Target transition point of our phase window
+        #define PHASE_THRESHOLD  (PHASE_MAX / 2)               // Target transition point of our phase window
     #endif
 #elif BITRATE == 2400
     #define PHASE_THRESHOLD  (PHASE_MAX / 2)  // Target transition point of our phase window
 #endif
 
 #if BITRATE == 300
-    #define DCD_TIMEOUT_SAMPLES 512
-    #define DCD_MIN_COUNT 4
+    #define DCD_TIMEOUT_SAMPLES 256
+    #define DCD_MIN_COUNT 1
 #elif BITRATE == 1200
     #define DCD_TIMEOUT_SAMPLES CONFIG_ADC_SAMPLERATE/100
     #define DCD_MIN_COUNT CONFIG_ADC_SAMPLERATE/1600
@@ -139,7 +137,7 @@ inline static uint8_t sinSample(uint16_t i) {
     #define MARK_FREQ  2165
     #define SPACE_FREQ 3970
 #elif BITRATE == 300
-    #define FILTER_CUTOFF 500
+    #define FILTER_CUTOFF 155
     #define MARK_FREQ  1600
     #define SPACE_FREQ 1800
 #else
@@ -189,7 +187,7 @@ typedef struct Afsk
     #elif BITRATE == 2400
         int8_t delayBuf[7 + 1];
     #elif BITRATE == 300
-        int8_t delayBuf[16 + 1];
+        int8_t delayBuf[9 + 1];
     #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data

@@ -410,7 +410,18 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
             afsk->iirY[0] = afsk->iirY[1];
             afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
-
+        #elif FILTER_CUTOFF == 155
+            #define IIR_GAIN 6 // Really 5.99865959
+            #define IIR_POLE 2 // Really Y[0] * 0.6665921828
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
+        #elif FILTER_CUTOFF == 100
+            #define IIR_GAIN 9 // Really 8.763507115
+            #define IIR_POLE 0.77 // Really Y[0] * 0.7717808665
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] * IIR_POLE);
         #else
             #error Unsupported filter cutoff!
         #endif
@@ -422,7 +433,12 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
             afsk->iirY[0] = afsk->iirY[1];
             afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + (afsk->iirY[0] / IIR_POLE);
-
+        #elif FILTER_CUTOFF == 200
+            #define IIR_GAIN 9 // Really 8.763507115
+            #define IIR_POLE 2 // Really Y[0] * 0.7717808665
+            afsk->iirX[1] = ((int8_t)fifo_pop(&afsk->delayFifo) * currentSample) / IIR_GAIN;
+            afsk->iirY[0] = afsk->iirY[1];
+            afsk->iirY[1] = afsk->iirX[0] + afsk->iirX[1] + ((afsk->iirY[0] / 4) * 3);
         #else
             #error Unsupported filter cutoff!
         #endif
@@ -500,7 +516,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
         afsk->currentPhase %= PHASE_MAX;
 
         afsk->actualBits <<= 1;
-        
+
         uint8_t bits = afsk->sampledBits & 0x07;
         if (bits == 0x07 || // 111
             bits == 0x06 || // 110
@@ -510,6 +526,7 @@ void AFSK_adc_isr(Afsk *afsk, int8_t currentSample) {
             afsk->actualBits |= 1;
         }
 
+        
         if (!hdlcParse(&afsk->hdlc, !TRANSITION_FOUND(afsk->actualBits), &afsk->rxFifo)) {
             afsk->status |= 1;
             if (fifo_isfull(&afsk->rxFifo)) {
