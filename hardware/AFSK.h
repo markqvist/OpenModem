@@ -39,7 +39,7 @@ inline static uint8_t sinSample(uint16_t i) {
 #define CPU_FREQ F_CPU
 
 
-#define BITRATE 300
+#define BITRATE 1200
 
 #if BITRATE == 300
     #define CONFIG_ADC_SAMPLERATE 4800UL
