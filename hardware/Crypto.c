@@ -152,7 +152,8 @@ bool update_entropy_index(void) {
 
 		UINT written = 0;
 		crypto_fr = f_write(&crypto_fp, crypto_fb, sizeof(entropy_index), &written);
-
+		f_close(&crypto_fp);
+		
 		if (crypto_fr == FR_OK && written == sizeof(entropy_index)) {
 			return true;
 		}

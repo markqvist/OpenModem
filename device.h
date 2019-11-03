@@ -5,7 +5,7 @@
 
 // Version info
 #define MAJ_VERSION  0x01
-#define MIN_VERSION  0x00
+#define MIN_VERSION  0x01
 
 // CPU settings
 #define TARGET_CPU m1284p
@@ -98,5 +98,15 @@
 	#define USR_IO_3	3
 	#define USR_IO_4	4
 #endif
+
+// File system paths
+#define PATH_BASE "OpenModem"
+#define PATH_LOG "OpenModem/Log"
+#define PATH_LOG_INDEX "OpenModem/Log/packet.index"
+
+#define PATH_ENTROPY_INDEX "OpenModem/entropy.index"
+#define PATH_ENTROPY_SOURCE "OpenModem/entropy.source"
+#define PATH_AES_128_KEY "OpenModem/aes128.key"
+#define PATH_CRYPTO_DISABLE "OpenModem/aes128.disable"
 
 #endif

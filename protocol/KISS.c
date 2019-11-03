@@ -36,6 +36,14 @@ bool ESCAPE;
 
 uint8_t command = CMD_UNKNOWN;
 
+bool log_ready = false;
+uint32_t log_index = 0;
+FIL log_fp;
+char log_fb[4];
+char log_filename[32];
+FRESULT log_fr;
+FILINFO log_fi;
+
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     ax25ctx = ax25;
     serial = ser;
@@ -125,6 +133,21 @@ void kiss_messageCallback(AX25Ctx *ctx) {
         }
 
         if (integrity_ok) {
+            bool log_write_ok = false;
+            if (config_log_packets && sd_mounted()) {
+                if (log_ready || log_init()) {
+                    // TODO: Assertion here on max path length
+                    memset(log_filename, 0x00, sizeof(log_filename));
+                    snprintf(log_filename, sizeof(log_filename), "%s/%lu.pkt", PATH_LOG, log_index);
+                    
+                    // Open file descriptor
+                    log_fr = f_open(&log_fp, log_filename, FA_CREATE_NEW | FA_WRITE);
+                    if (log_fr == FR_OK) {
+                        log_write_ok = true;
+                    }
+                }
+            }
+
             fputc(FEND, &serial->uart0);
             fputc(0x00, &serial->uart0);
             for (unsigned i = 0; i < ctx->frame_len-2; i++) {
@@ -138,10 +161,104 @@ void kiss_messageCallback(AX25Ctx *ctx) {
                 } else {
                     fputc(b, &serial->uart0);
                 }
+                if (log_write_ok) {
+                    UINT written = 0;
+                    log_fr = f_write(&log_fp, &b, 1, &written);
+                }
             }
             fputc(FEND, &serial->uart0);
+
+            if (config_log_packets && sd_mounted() && log_ready) {
+                f_close(&log_fp);
+                update_log_index();
+            }
         }
     #endif
+}
+
+bool log_init(void) {
+    if (sd_mounted()) {
+        // Check that base dir exists
+        log_fr = f_stat(PATH_BASE, &log_fi);
+        if (log_fr == FR_NO_PATH || log_fr == FR_NO_FILE) {
+            log_fr = f_mkdir(PATH_BASE);
+            if (log_fr != FR_OK) {
+                return false;
+            } else {
+            }
+        }
+
+        // Check that log dir exists
+        log_fr = f_stat(PATH_LOG, &log_fi);
+        if (log_fr == FR_NO_PATH || log_fr == FR_NO_FILE) {
+            log_fr = f_mkdir(PATH_LOG);
+            if (log_fr != FR_OK) {
+                return false;
+            }
+        }
+
+        if (load_log_index()) {
+            log_ready = true;
+            return true;
+        } else {
+            return false;
+        }
+        
+    } else {
+        return false;
+    }
+}
+
+bool load_log_index(void) {
+    if (sd_mounted()) {
+        log_fr = f_open(&log_fp, PATH_LOG_INDEX, FA_READ);
+        if (log_fr == FR_NO_FILE) {
+            f_close(&log_fp);
+            log_fr = f_open(&log_fp, PATH_LOG_INDEX, FA_CREATE_NEW | FA_WRITE);
+
+            if (log_fr == FR_OK) {
+                log_index = 0x00000000;
+                memcpy(log_fb, &log_index, sizeof(log_index));
+                
+                UINT written = 0;
+                log_fr = f_write(&log_fp, log_fb, sizeof(log_index), &written);
+                f_close(&log_fp);
+            }
+
+            log_fr = f_open(&log_fp, PATH_LOG_INDEX, FA_READ);
+        }
+
+        if (log_fr == FR_OK) {
+            UINT read = 0;
+            log_fr = f_read(&log_fp, log_fb, sizeof(log_index), &read);
+            f_close(&log_fp);
+            if (log_fr == FR_OK && read == sizeof(log_index)) {
+                memcpy(&log_index, log_fb, sizeof(log_index));
+                return true;
+            }
+        }
+    }
+
+    f_close(&log_fp);
+    return false;
+}
+
+bool update_log_index(void) {
+    log_fr = f_open(&log_fp, PATH_LOG_INDEX, FA_WRITE);
+    if (log_fr == FR_OK) {
+        log_index++;
+        memcpy(log_fb, &log_index, sizeof(log_index));
+
+        UINT written = 0;
+        log_fr = f_write(&log_fp, log_fb, sizeof(log_index), &written);
+
+        f_close(&log_fp);
+
+        if (log_fr == FR_OK && written == sizeof(log_index)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void kiss_csma(void) {

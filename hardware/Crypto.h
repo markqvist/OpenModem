@@ -10,11 +10,6 @@
 #include "hardware/LED.h"
 #include "hardware/SD.h"
 
-#define PATH_ENTROPY_INDEX "OpenModem/entropy.index"
-#define PATH_ENTROPY_SOURCE "OpenModem/entropy.source"
-#define PATH_AES_128_KEY "OpenModem/aes128.key"
-#define PATH_CRYPTO_DISABLE "OpenModem/aes128.disable"
-
 #define CRYPTO_KEY_SIZE_BITS 128
 #define CRYPTO_KEY_SIZE (CRYPTO_KEY_SIZE_BITS/8)
 #define CRYPTO_HMAC_SIZE_BITS 128

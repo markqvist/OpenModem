@@ -48,4 +48,8 @@ void kiss_output_modem_mode(void);
 void kiss_output_config(uint8_t* data, size_t length);
 void kiss_output_afsk_peak(void);
 
+bool log_init(void);
+bool load_log_index(void);
+bool update_log_index(void);
+
 #endif
