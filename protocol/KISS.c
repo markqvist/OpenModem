@@ -30,6 +30,8 @@ Serial *serial;
 volatile ticks_t last_serial_read = 0;
 extern volatile int8_t afsk_peak;
 
+ticks_t last_csma_check = 0;
+
 size_t frame_len;
 bool IN_FRAME;
 bool ESCAPE;
@@ -270,8 +272,15 @@ void kiss_csma(void) {
                     if (config_p == 255) {
                         kiss_flushQueue();
                     } else {
-                        // TODO: Implement real CSMA
-                        kiss_flushQueue();
+                        ticks_t csma_timeout = last_csma_check + ms_to_ticks(config_slottime);
+                        if (timer_clock() > csma_timeout) {
+                            uint8_t r = (uint8_t)random();
+                            if (r < config_p) {
+                                kiss_flushQueue();
+                            } else {
+                                last_csma_check = timer_clock();
+                            }
+                        }
                     }
                 }
             }
@@ -280,8 +289,15 @@ void kiss_csma(void) {
                 if (config_p == 255) {
                     kiss_flushQueue();
                 } else {
-                    // TODO: Implement real CSMA
-                    kiss_flushQueue();
+                    ticks_t csma_timeout = last_csma_check + ms_to_ticks(config_slottime);
+                    if (timer_clock() > csma_timeout) {
+                        uint8_t r = (uint8_t)random();
+                        if (r < config_p) {
+                            kiss_flushQueue();
+                        } else {
+                            last_csma_check = timer_clock();
+                        }
+                    }
                 }
             }
         #endif
@@ -371,6 +387,9 @@ void kiss_flushQueue(void) {
             }
         }
 
+        // TODO: Maybe remove this error state and fail
+        // silently, while reverting to operational state
+        // by resetting all buffers
         if (processed < queue_height) {
             while (true) {
                 LED_TX_ON();

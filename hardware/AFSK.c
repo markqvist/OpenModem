@@ -123,6 +123,7 @@ static void AFSK_txStart(Afsk *afsk) {
         afsk->bitstuffCount = 0;
         afsk->sending = true;
         afsk->sending_data = true;
+        LED_RX_OFF();
         LED_TX_ON();
         afsk->preambleLength = DIV_ROUND(config_preamble * BITRATE, 8000);
         AFSK_DAC_IRQ_START();
