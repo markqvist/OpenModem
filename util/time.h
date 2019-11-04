@@ -12,6 +12,9 @@ typedef int32_t ticks_t;
 typedef int32_t mtime_t;
 volatile ticks_t _clock;
 
+volatile uint32_t _rtc_seconds;
+volatile uint16_t _rtc_seconds_accu;
+
 static inline ticks_t timer_clock(void) {
     ticks_t result;
 
@@ -22,9 +25,26 @@ static inline ticks_t timer_clock(void) {
     return result;
 }
 
-
 inline ticks_t ms_to_ticks(mtime_t ms) {
     return ms * DIV_ROUND(CLOCK_TICKS_PER_SEC, 1000);
+}
+
+inline mtime_t ticks_to_ms(ticks_t ticks) {
+    return DIV_ROUND(ticks, DIV_ROUND(CLOCK_TICKS_PER_SEC, 1000));
+}
+
+static inline uint32_t rtc_seconds(void) {
+    uint32_t result;
+
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        result = _rtc_seconds;
+    }
+
+    return result;
+}
+
+static inline mtime_t rtc_milliseconds(void) {
+    return ticks_to_ms(timer_clock() % CLOCK_TICKS_PER_SEC);
 }
 
 inline void cpu_relax(void) {

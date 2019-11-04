@@ -135,21 +135,6 @@ void kiss_messageCallback(AX25Ctx *ctx) {
         }
 
         if (integrity_ok) {
-            bool log_write_ok = false;
-            if (config_log_packets && sd_mounted()) {
-                if (log_ready || log_init()) {
-                    // TODO: Assertion here on max path length
-                    memset(log_filename, 0x00, sizeof(log_filename));
-                    snprintf(log_filename, sizeof(log_filename), "%s/%lu.pkt", PATH_LOG, log_index);
-                    
-                    // Open file descriptor
-                    log_fr = f_open(&log_fp, log_filename, FA_CREATE_NEW | FA_WRITE);
-                    if (log_fr == FR_OK) {
-                        log_write_ok = true;
-                    }
-                }
-            }
-
             fputc(FEND, &serial->uart0);
             fputc(0x00, &serial->uart0);
             for (unsigned i = 0; i < ctx->frame_len-2; i++) {
@@ -163,16 +148,31 @@ void kiss_messageCallback(AX25Ctx *ctx) {
                 } else {
                     fputc(b, &serial->uart0);
                 }
-                if (log_write_ok) {
-                    UINT written = 0;
-                    log_fr = f_write(&log_fp, &b, 1, &written);
-                }
             }
             fputc(FEND, &serial->uart0);
 
-            if (config_log_packets && sd_mounted() && log_ready) {
-                f_close(&log_fp);
-                update_log_index();
+            ticks_t start_t = timer_clock();
+            if (config_log_packets && sd_mounted()) {
+                if (log_ready || log_init()) {
+                    log_fr = f_open(&log_fp, log_filename, FA_OPEN_APPEND | FA_WRITE);
+                    if (log_fr == FR_OK) {
+                        // Write PCAP segment to file
+                        UINT written = 0;
+                        uint32_t pcap_ts_sec = rtc_seconds();
+                        uint32_t pcap_ts_usec = (rtc_milliseconds()*(uint32_t)1000);
+                        uint32_t pcap_incl_len = ctx->frame_len;
+                        uint32_t pcap_orig_len = ctx->frame_len;
+
+                        f_write(&log_fp, &pcap_ts_sec, sizeof(pcap_ts_sec), &written);
+                        f_write(&log_fp, &pcap_ts_usec, sizeof(pcap_ts_usec), &written);
+                        f_write(&log_fp, &pcap_incl_len, sizeof(pcap_incl_len), &written);
+                        f_write(&log_fp, &pcap_orig_len, sizeof(pcap_orig_len), &written);
+                        f_write(&log_fp, ctx->buf, ctx->frame_len, &written);
+
+                        // Close handle and flush to disk
+                        f_close(&log_fp);
+                    }
+                }
             }
         }
     #endif
@@ -200,8 +200,38 @@ bool log_init(void) {
         }
 
         if (load_log_index()) {
-            log_ready = true;
-            return true;
+            memset(log_filename, 0x00, sizeof(log_filename));
+            snprintf(log_filename, sizeof(log_filename), "%s/%lu.pcap", PATH_LOG, log_index);
+            update_log_index();
+
+            log_fr = f_open(&log_fp, log_filename, FA_CREATE_NEW | FA_WRITE);
+            if (log_fr == FR_OK) {
+                uint32_t pcap_magic_number = 0xa1b2c3d4;
+                uint16_t pcap_maj_version  = 0x0002;
+                uint16_t pcap_min_version  = 0x0004;
+                int32_t  pcap_thiszone     = 0;
+                uint32_t pcap_sigfigs      = 0;
+                uint32_t pcap_snaplen      = AX25_MAX_FRAME_LEN;
+                uint32_t pcap_network      = 0x00000003;
+
+                // Write PCAP header
+                UINT written = 0;
+                f_write(&log_fp, &pcap_magic_number, sizeof(pcap_magic_number), &written);
+                f_write(&log_fp, &pcap_maj_version, sizeof(pcap_maj_version), &written);
+                f_write(&log_fp, &pcap_min_version, sizeof(pcap_min_version), &written);
+                f_write(&log_fp, &pcap_thiszone, sizeof(pcap_thiszone), &written);
+                f_write(&log_fp, &pcap_sigfigs, sizeof(pcap_sigfigs), &written);
+                f_write(&log_fp, &pcap_snaplen, sizeof(pcap_snaplen), &written);
+                f_write(&log_fp, &pcap_network, sizeof(pcap_network), &written);
+
+                // Close handle
+                f_close(&log_fp);
+
+                log_ready = true;
+                return true;
+            } else {
+                return false;
+            }
         } else {
             return false;
         }
@@ -541,18 +571,17 @@ void kiss_serialCallback(uint8_t sbyte) {
             if (sbyte == 0x01) {
                 kiss_output_afsk_peak();
             }
-        }  else if (command == CMD_ENABLE_DIAGNOSTICS) {
+        } else if (command == CMD_ENABLE_DIAGNOSTICS) {
             if (sbyte == 0x00) {
                 config_disable_diagnostics();
             } else {
                 config_enable_diagnostics();
             }
-        }  else if (command == CMD_MODE) {
+        } else if (command == CMD_MODE) {
             if (sbyte == 0x00) {
                 kiss_output_modem_mode();
             }
         }
-        
     }
 }
 

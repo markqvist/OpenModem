@@ -7,6 +7,8 @@
 #include "util/Config.h"
 
 extern volatile ticks_t _clock;
+extern volatile uint32_t _rtc_seconds;
+extern volatile uint16_t _rtc_seconds_accu;
 
 bool hw_afsk_dac_isr = false;
 bool hw_5v_ref = false;
@@ -51,6 +53,10 @@ void AFSK_dac_init(void) {
 }
 
 void AFSK_adc_init(void) {
+    _clock = 0;
+    _rtc_seconds = 0;
+    _rtc_seconds_accu = 0;
+
     // Set Timer1 to normal operation
     TCCR1A = 0;
 
@@ -579,4 +585,8 @@ ISR(ADC_vect) {
     update_led_status();
 
     ++_clock;
+    if (++_rtc_seconds_accu >= CLOCK_TICKS_PER_SEC) {
+        _rtc_seconds++;
+        _rtc_seconds_accu = 0;
+    }
 }
