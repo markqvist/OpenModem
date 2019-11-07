@@ -151,7 +151,6 @@ void kiss_messageCallback(AX25Ctx *ctx) {
             }
             fputc(FEND, &serial->uart0);
 
-            ticks_t start_t = timer_clock();
             if (config_log_packets && sd_mounted()) {
                 if (log_ready || log_init()) {
                     log_fr = f_open(&log_fp, log_filename, FA_OPEN_APPEND | FA_WRITE);
@@ -160,14 +159,14 @@ void kiss_messageCallback(AX25Ctx *ctx) {
                         UINT written = 0;
                         uint32_t pcap_ts_sec = rtc_seconds();
                         uint32_t pcap_ts_usec = (rtc_milliseconds()*(uint32_t)1000);
-                        uint32_t pcap_incl_len = ctx->frame_len;
-                        uint32_t pcap_orig_len = ctx->frame_len;
+                        uint32_t pcap_incl_len = ctx->frame_len-2;
+                        uint32_t pcap_orig_len = ctx->frame_len-2;
 
                         f_write(&log_fp, &pcap_ts_sec, sizeof(pcap_ts_sec), &written);
                         f_write(&log_fp, &pcap_ts_usec, sizeof(pcap_ts_usec), &written);
                         f_write(&log_fp, &pcap_incl_len, sizeof(pcap_incl_len), &written);
                         f_write(&log_fp, &pcap_orig_len, sizeof(pcap_orig_len), &written);
-                        f_write(&log_fp, ctx->buf, ctx->frame_len, &written);
+                        f_write(&log_fp, ctx->buf, ctx->frame_len-2, &written);
 
                         // Close handle and flush to disk
                         f_close(&log_fp);
@@ -409,6 +408,29 @@ void kiss_flushQueue(void) {
                     for (size_t i = 0; i < length; i++) {
                         size_t pos = (start+i)%CONFIG_QUEUE_SIZE;
                         tx_buffer[i] = packet_queue[pos];
+                    }
+
+                    if (config_log_packets && sd_mounted()) {
+                        if (log_ready || log_init()) {
+                            log_fr = f_open(&log_fp, log_filename, FA_OPEN_APPEND | FA_WRITE);
+                            if (log_fr == FR_OK) {
+                                // Write PCAP segment to file
+                                UINT written = 0;
+                                uint32_t pcap_ts_sec = rtc_seconds();
+                                uint32_t pcap_ts_usec = (rtc_milliseconds()*(uint32_t)1000);
+                                uint32_t pcap_incl_len = length;
+                                uint32_t pcap_orig_len = length;
+
+                                f_write(&log_fp, &pcap_ts_sec, sizeof(pcap_ts_sec), &written);
+                                f_write(&log_fp, &pcap_ts_usec, sizeof(pcap_ts_usec), &written);
+                                f_write(&log_fp, &pcap_incl_len, sizeof(pcap_incl_len), &written);
+                                f_write(&log_fp, &pcap_orig_len, sizeof(pcap_orig_len), &written);
+                                f_write(&log_fp, tx_buffer, length, &written);
+
+                                // Close handle and flush to disk
+                                f_close(&log_fp);
+                            }
+                        }
                     }
 
                     ax25_sendRaw(ax25ctx, tx_buffer, length);
