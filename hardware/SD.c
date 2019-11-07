@@ -1,5 +1,7 @@
 #include "SD.h"
 #include "hardware/Crypto.h"
+#include "util/time.h"
+#include <time.h>
 
 FATFS sdfs;
 
@@ -163,11 +165,21 @@ void sd_scheduler(void) {
 // TODO: Get time from RTC or host
 DWORD get_fattime (void)
 {
-    // Returns current time packed into a DWORD variable 
-    return    ((DWORD)(2018 - 1980) << 25)  // Year 2013 
-    | ((DWORD)8 << 21)              // Month 7 
-    | ((DWORD)2 << 16)              // Mday 28 
-    | ((DWORD)20 << 11)             // Hour 0..24
-    | ((DWORD)30 << 5)              // Min 0 
-    | ((DWORD)0 >> 1);              // Sec 0
+    time_t timestamp = rtc_seconds();
+    struct tm now;
+    gmtime_r(&timestamp, &now);
+
+    int16_t year   = now.tm_year;
+    int8_t  month  = now.tm_mon+1;
+    int8_t  day    = now.tm_mday;
+    int8_t  hour   = now.tm_hour;
+    int8_t  minute = now.tm_min;
+    int8_t  second = now.tm_sec;
+
+    return    ((DWORD)(year - 2000) << 25)
+    | ((DWORD)month << 21)
+    | ((DWORD)day << 16)
+    | ((DWORD)hour << 11)
+    | ((DWORD)minute << 5)
+    | ((DWORD)second >> 1);
 }

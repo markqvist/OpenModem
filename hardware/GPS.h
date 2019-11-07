@@ -31,6 +31,8 @@ void gps_send_command(const char *cmd);
 uint8_t gps_parse_nmea(char *nmea);
 uint8_t gps_nmea_parse_hex(char c);
 
+bool gps_time_set;
+
 uint8_t gps_t_year;
 uint8_t gps_t_month;
 uint8_t gps_t_day;

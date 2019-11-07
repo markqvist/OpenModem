@@ -157,7 +157,7 @@ void kiss_messageCallback(AX25Ctx *ctx) {
                     if (log_fr == FR_OK) {
                         // Write PCAP segment to file
                         UINT written = 0;
-                        uint32_t pcap_ts_sec = rtc_seconds();
+                        uint32_t pcap_ts_sec = rtc_unix_timestamp();
                         uint32_t pcap_ts_usec = (rtc_milliseconds()*(uint32_t)1000);
                         uint32_t pcap_incl_len = ctx->frame_len-2;
                         uint32_t pcap_orig_len = ctx->frame_len-2;
@@ -416,7 +416,7 @@ void kiss_flushQueue(void) {
                             if (log_fr == FR_OK) {
                                 // Write PCAP segment to file
                                 UINT written = 0;
-                                uint32_t pcap_ts_sec = rtc_seconds();
+                                uint32_t pcap_ts_sec = rtc_unix_timestamp();
                                 uint32_t pcap_ts_usec = (rtc_milliseconds()*(uint32_t)1000);
                                 uint32_t pcap_incl_len = length;
                                 uint32_t pcap_orig_len = length;
@@ -574,6 +574,15 @@ void kiss_serialCallback(uint8_t sbyte) {
                 }
                 config_set_gps_mode(sbyte);
             }
+        } else if (command == CMD_NMEA) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_nmea_output(sbyte);
+            }
         } else if (command == CMD_BT_MODE) {
             if (sbyte == FESC) { ESCAPE = true; } else {
                 if (ESCAPE) {
@@ -635,6 +644,24 @@ void kiss_output_afsk_peak(void) {
         fputc(b, &serial->uart0);
     }
 
+    fputc(FEND, &serial->uart0);
+}
+
+void kiss_output_nmea(char* data, size_t length) {
+    fputc(FEND, &serial->uart0);
+    fputc(CMD_NMEA, &serial->uart0);
+    for (unsigned i = 0; i < length; i++) {
+        uint8_t b = data[i];
+        if (b == FEND) {
+            fputc(FESC, &serial->uart0);
+            fputc(TFEND, &serial->uart0);
+        } else if (b == FESC) {
+            fputc(FESC, &serial->uart0);
+            fputc(TFESC, &serial->uart0);
+        } else {
+            fputc(b, &serial->uart0);
+        }
+    }
     fputc(FEND, &serial->uart0);
 }
 

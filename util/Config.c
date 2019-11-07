@@ -25,7 +25,12 @@ void config_init(void) {
 		config_save_to_eeprom();
 	}
 
+	config_init_ephemeral();
 	config_apply();
+}
+
+void config_init_ephemeral(void) {
+	config_gps_nmea_output = CONFIG_GPS_NMEA_NONE;
 }
 
 void config_apply(void) {
@@ -219,6 +224,12 @@ void config_set_gps_mode(uint8_t mode) {
 	if (mode == CONFIG_GPS_OFF) config_gps_mode = CONFIG_GPS_OFF;
 	if (mode == CONFIG_GPS_AUTODETECT) config_gps_mode = CONFIG_GPS_AUTODETECT;
 	if (mode == CONFIG_GPS_REQUIRED) config_gps_mode = CONFIG_GPS_REQUIRED;
+}
+
+void config_set_nmea_output(uint8_t nmea_output) {
+	if (nmea_output == CONFIG_GPS_NMEA_NONE) config_gps_nmea_output = nmea_output;
+	if (nmea_output == CONFIG_GPS_NMEA_RAW) config_gps_nmea_output = nmea_output;
+	if (nmea_output == CONFIG_GPS_NMEA_ENCAP) config_gps_nmea_output = nmea_output;
 }
 
 void config_set_bt_mode(uint8_t mode) {

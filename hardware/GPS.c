@@ -1,4 +1,8 @@
 #include "GPS.h"
+#include "util/Config.h"
+#include "protocol/KISS.h"
+
+#include <time.h>
 
 Serial *serial;
 
@@ -35,13 +39,20 @@ void gps_init(Serial *ser) {
 	gps_speed_kmh = 0;
 	gps_bearing = 0;
 
+	gps_time_set = false;
+
 	if (gps_detect()) {
 		gps_installed = true;
 
 		serial_setbaudrate_9600(1);
-		gps_send_command(PMTK_SET_BAUD_57600);
-		serial_setbaudrate_57600(1);
+		delay_ms(100);
 
+		gps_send_command(PMTK_SET_BAUD_57600);
+		delay_ms(100);
+		
+		serial_setbaudrate_57600(1);
+		delay_ms(100);
+		
 		gps_send_command(PMTK_API_SET_FIX_CTL_1HZ);
 		gps_send_command(PMTK_SET_NMEA_OUTPUT_RMCGGA);
 
@@ -55,7 +66,19 @@ void gps_init(Serial *ser) {
 }
 
 void gps_update_rtc(void) {
-	// TODO: implement this
+	struct tm now;
+
+	now.tm_year = (gps_t_year+2000) - 1900;
+	now.tm_mon = gps_t_month-1;
+	now.tm_mday = gps_t_day;
+	now.tm_hour = gps_t_hour;
+	now.tm_min = gps_t_minute;
+	now.tm_sec = gps_t_second;
+	now.tm_isdst = -1;
+
+	time_t timestamp = mktime(&now);
+	rtc_set_seconds(timestamp);
+	gps_time_set = true;
 }
 
 void gps_jobs(void) {
@@ -67,6 +90,14 @@ void gps_send_command(const char *cmd) {
 }
 
 void gps_nmea_parse(uint8_t sentence_length) {
+	if (config_gps_nmea_output == CONFIG_GPS_NMEA_RAW) {
+		printf("%s\n\r", nmea_parse_buf);
+	}
+
+	if (config_gps_nmea_output == CONFIG_GPS_NMEA_ENCAP) {
+		kiss_output_nmea(nmea_parse_buf, sentence_length);	
+	}
+
 	if (sentence_length > 4) {
 		if (nmea_parse_buf[sentence_length-4] == '*') {
 			uint16_t checksum = gps_nmea_parse_hex(nmea_parse_buf[sentence_length-3]);
@@ -84,9 +115,8 @@ void gps_nmea_parse(uint8_t sentence_length) {
 				if (strstr(nmea_parse_buf, "$GPGGA")) {
 					char *pointer = nmea_parse_buf;
 					
-					// Parse UTC time
+					// Ignore UTC time
 					pointer = strchr(pointer, ',')+1;
-					uint32_t nmea_time = (float)atof(pointer);
 
 					// Parse latitude
 					pointer = strchr(pointer, ',')+1;
@@ -138,19 +168,13 @@ void gps_nmea_parse(uint8_t sentence_length) {
 					// Get fix quality
 					pointer = strchr(pointer, ',')+1;
 					uint8_t nmea_fix = atoi(pointer);
-					if (nmea_fix == 1) {
+					if (nmea_fix > 0 && nmea_fix < 7) {
 						gps_fix = true;
 					} else {
 						gps_fix = false;
 					}
 
 					if (gps_fix) {
-						// Set times
-						gps_t_hour = nmea_time / 10000;
-						gps_t_minute = (nmea_time % 10000) / 100;
-						gps_t_second = (nmea_time % 100);
-						gps_update_rtc();
-
 						// Set latitude and longtitude
 						gps_lat_degrees = atoi(nmea_lat_deg_str);
 						gps_lat_minutes = atoi(nmea_lat_min_str);
@@ -188,23 +212,7 @@ void gps_nmea_parse(uint8_t sentence_length) {
 						gps_lat_sign = nmea_lat_sign;
 						gps_lon_sign = nmea_lon_sign;
 						gps_lat *= (gps_lat_sign == 'N' ? 1 : -1);
-						gps_lon *= (gps_lon_sign == 'E' ? 1 : -1);
-
-						// TODO: Remove this
-						// printf("GPS fix: %d\r\n", nmea_fix);
-						// printf("GPS satellites: %d\r\n", gps_sats);
-						// printf("GPS latitude: %d\" %d' %.2fs %c\r\n", gps_lat_degrees, gps_lat_minutes, gps_lat_seconds, gps_lat_sign);
-						// printf("GPS longtitude: %d\" %d' %.2fs %c\r\n", gps_lon_degrees, gps_lon_minutes, gps_lon_seconds, gps_lon_sign);
-						// printf("GPS coords: %.6f,%.6f\r\n", gps_lat, gps_lon);
-						// printf("GPS speed %.2f Km/h\r\n", gps_speed_kmh);
-						// printf("GPS speed %.2f knots\r\n", gps_speed_knots);
-						// printf("GPS bearing %.2f\r\n", gps_bearing);
-						// printf("GPS height above MSL: %.2f\r\n", gps_height_above_msl);
-						// printf("GPS altitude: %.2f\r\n", gps_altitude);
-						// printf("GPS geoid height: %.2f\r\n", gps_geoid_height);
-						// printf("GPS HDOP: %.2f\r\n", gps_hdop);
-						// printf("GPS time %d:%d:%d UTC\r\n", gps_t_hour, gps_t_minute, gps_t_second);
-						
+						gps_lon *= (gps_lon_sign == 'E' ? 1 : -1);						
 					}
 				}
 
@@ -212,10 +220,13 @@ void gps_nmea_parse(uint8_t sentence_length) {
 				if (strstr(nmea_parse_buf, "$GPRMC")) {
 					if (gps_fix) {
 						char *pointer = nmea_parse_buf;
+						uint32_t nmea_date = 0;
+						uint32_t nmea_time = 0;
 
-						// Ignore UTC time
+						// Get UTC time
 						pointer = strchr(pointer, ',')+1;
-
+						if (!gps_time_set) nmea_time = (float)atof(pointer);
+						
 						// Ignore navigation receiver warning
 						pointer = strchr(pointer, ',')+1;
 
@@ -239,6 +250,36 @@ void gps_nmea_parse(uint8_t sentence_length) {
 						// Get bearing
 						pointer = strchr(pointer, ',')+1;
 						gps_bearing = atof(pointer);
+
+						// Get date
+						pointer = strchr(pointer, ',')+1;
+						if (!gps_time_set) nmea_date = (float)atof(pointer);
+
+						// Set times
+						if (!gps_time_set) {
+							gps_t_hour    = nmea_time / 10000;
+							gps_t_minute  = (nmea_time % 10000) / 100;
+							gps_t_second  = (nmea_time % 100);
+							gps_t_day     = nmea_date / 10000;
+							gps_t_month   = (nmea_date % 10000) / 100;
+							gps_t_year    = (nmea_date % 100);
+							gps_update_rtc();
+						}
+
+						// TODO: Remove this
+						// printf("GPS fix\r\n");
+						// printf("GPS satellites: %d\r\n", gps_sats);
+						// printf("GPS latitude: %d\" %d' %.2fs %c\r\n", gps_lat_degrees, gps_lat_minutes, gps_lat_seconds, gps_lat_sign);
+						// printf("GPS longtitude: %d\" %d' %.2fs %c\r\n", gps_lon_degrees, gps_lon_minutes, gps_lon_seconds, gps_lon_sign);
+						// printf("GPS coords: %.6f,%.6f\r\n", gps_lat, gps_lon);
+						// printf("GPS speed %.2f Km/h\r\n", gps_speed_kmh);
+						// printf("GPS speed %.2f knots\r\n", gps_speed_knots);
+						// printf("GPS bearing %.2f\r\n", gps_bearing);
+						// printf("GPS height above MSL: %.2f\r\n", gps_height_above_msl);
+						// printf("GPS altitude: %.2f\r\n", gps_altitude);
+						// printf("GPS geoid height: %.2f\r\n", gps_geoid_height);
+						// printf("GPS HDOP: %.2f\r\n", gps_hdop);
+						// printf("GPS time %d/%d/%d %d:%d:%d UTC\r\n", gps_t_year, gps_t_month, gps_t_day, gps_t_hour, gps_t_minute, gps_t_second);
 					} else {
 						gps_speed_knots = 0;
 						gps_speed_kmh = 0;
@@ -257,6 +298,8 @@ void gps_serial_callback(char byte) {
 		memset(nmea_input_buf, 0, sizeof(nmea_input_buf));
 
 		gps_nmea_parse(nmea_read_length);
+		memset(nmea_parse_buf, 0, sizeof(nmea_parse_buf));
+
 		nmea_read_length = 0;
 	} else {
 		if (nmea_read_length < NMEA_MAX_LENGTH) {

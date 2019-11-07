@@ -6,6 +6,8 @@
 #include "hardware/LED.h"
 #include "hardware/sdcard/diskio.h"
 
+#define UNIX_EPOCH_OFFSET 946684800
+
 #define DIV_ROUND(dividend, divisor)  (((dividend) + (divisor) / 2) / (divisor))
 
 typedef int32_t ticks_t;
@@ -43,8 +45,23 @@ static inline uint32_t rtc_seconds(void) {
     return result;
 }
 
+static inline uint32_t rtc_unix_timestamp(void) {
+    uint32_t result;
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        result = _rtc_seconds;
+    }
+
+    return result+UNIX_EPOCH_OFFSET;
+}
+
 static inline mtime_t rtc_milliseconds(void) {
     return ticks_to_ms(timer_clock() % CLOCK_TICKS_PER_SEC);
+}
+
+static inline void rtc_set_seconds(uint32_t seconds) {
+    ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+        _rtc_seconds = seconds;
+    }
 }
 
 inline void cpu_relax(void) {

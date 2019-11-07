@@ -29,6 +29,10 @@
 #define CONFIG_GPS_AUTODETECT		0x01
 #define CONFIG_GPS_REQUIRED			0x02
 
+#define CONFIG_GPS_NMEA_NONE		0x00
+#define CONFIG_GPS_NMEA_RAW			0x01
+#define CONFIG_GPS_NMEA_ENCAP		0x02
+
 #define CONFIG_BLUETOOTH_OFF		0x00
 #define CONFIG_BLUETOOTH_AUTODETECT	0x01
 #define CONFIG_BLUETOOTH_REQUIRED	0x02
@@ -66,12 +70,14 @@ bool config_passall;
 bool config_log_packets;
 bool config_crypto_lock;
 uint8_t config_gps_mode;
+uint8_t config_gps_nmea_output;
 uint8_t config_bluetooth_mode;
 uint8_t config_serial_baudrate;
 
 bool config_output_diagnostics;
 
 void config_init(void);
+void config_init_ephemeral(void);
 void config_apply(void);
 void config_save(void);
 
@@ -94,6 +100,7 @@ void config_set_output_gain(uint8_t gain);
 void config_set_input_gain(uint8_t gain);
 void config_set_passall(uint8_t passall);
 void config_set_log_packets(uint8_t log_packets);
+void config_set_nmea_output(uint8_t nmea_output);
 void config_set_gps_mode(uint8_t mode);
 void config_set_bt_mode(uint8_t mode);
 
