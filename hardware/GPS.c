@@ -43,22 +43,28 @@ void gps_init(Serial *ser) {
 
 	if (gps_detect()) {
 		gps_installed = true;
-
-		serial_setbaudrate_9600(1);
-		delay_ms(100);
-
-		gps_send_command(PMTK_SET_BAUD_57600);
-		delay_ms(100);
-		
-		serial_setbaudrate_57600(1);
-		delay_ms(100);
-		
-		gps_send_command(PMTK_API_SET_FIX_CTL_1HZ);
-		gps_send_command(PMTK_SET_NMEA_OUTPUT_RMCGGA);
-
 		GPS_DDR |= _BV(GPS_EN_PIN);
-		if (gps_enabled()) { gps_powerup(); } else { gps_powerdown(); }
-		
+
+		if (config_gps_mode == CONFIG_GPS_AUTODETECT || config_gps_mode == CONFIG_GPS_REQUIRED) {
+			serial_setbaudrate_9600(1);
+			delay_ms(100);
+
+			gps_send_command(PMTK_SET_BAUD_57600);
+			delay_ms(100);
+			
+			serial_setbaudrate_57600(1);
+			delay_ms(100);
+			
+			gps_send_command(PMTK_API_SET_FIX_CTL_1HZ);
+			gps_send_command(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+
+			gps_power = true;
+			gps_powerup();
+		} else {
+			gps_power = false;
+			gps_powerdown();
+		}
+
 	} else {
 		gps_installed = false;
 		gps_power = false;

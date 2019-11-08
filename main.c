@@ -65,6 +65,9 @@ void system_check(void) {
         }
     }
 
+    // TODO: Check GPS_REQUIRED and BLUETOOTH_REQUIRED
+    // here before giving green light.
+
     // Give the green light if everything checks out
     LED_STATUS_ON();
 }
