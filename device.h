@@ -34,7 +34,7 @@
 #define CONFIG_BENCHMARK_MODE false
 
 // CSMA Settings
-#define CONFIG_FULL_DUPLEX false  // TODO: Actually implement fdx
+#define CONFIG_FULL_DUPLEX false
 #define CONFIG_CSMA_P_DEFAULT 255
 #define CONFIG_CSMA_SLOTTIME_DEFAULT 20
 
@@ -42,7 +42,10 @@
 #define AX25_MAX_FRAME_LEN 611
 #define AX25_MAX_PAYLOAD   576
 #define AX25_MIN_PAYLOAD   2
-#define AX25_ENCRYPTED_MIN_LENGTH 51 // Padding byte + IV + 1 Block + HMAC + CRC
+#define AX25_ENCRYPTED_MIN_LENGTH 51
+// The minimum packet length of an AES-128
+// encrypted packet is equal to:
+// padding byte + IV + 1 Block + HMAC + CRC
 
 // Packet settings
 #define CONFIG_PASSALL false

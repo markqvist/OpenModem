@@ -9,7 +9,6 @@
 #include "util/FIFO.h"
 #include "protocol/HDLC.h"
 
-// TODO: Optimise RAM by moving this to progmem
 #define SIN_LEN 512
 static const uint8_t sine_table[] =
 {
@@ -98,7 +97,7 @@ inline static uint8_t sinSample(uint16_t i) {
     #define PHASE_BITS   8 // Sub-sample phase counter resolution
 #endif
 
-#define PHASE_INC    1                              // Nudge by above resolution for each adjustment
+#define PHASE_INC    1     // Nudge by above resolution for each adjustment
 
 
 #define PHASE_MAX    (ADC_SAMPLESPERBIT * PHASE_BITS)   // Size of our phase counter
