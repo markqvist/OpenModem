@@ -1,7 +1,7 @@
-OpenModem
+Open Modem Firmware
 ==========
 
-OpenModem is an open source firmware implementation of a AFSK modem supporting 300, 1200 and 2400 baud operation, suitable for communication over a wide variety of analogue mediums, both radio and wired. The firmware is designed for and compatible with [unsigned.io's OpenModem](https://unsigned.io/openmodem), but can be used on any similar build.
+Open Modem Firmware is an open source firmware implementation of a AFSK modem supporting 300, 1200 and 2400 baud operation, suitable for communication over a wide variety of analogue mediums, both radio and wired. The firmware is designed for and compatible with [unsigned.io's OpenModem](https://unsigned.io/openmodem), but can be used on any similar build.
 
 Complete modems are available from [the unsigned.io shop](http://unsigned.io/shop), or can be build from scratch by referring to the schematics and documentation on the [OpenModem page](https://unsigned.io/projects/openmodem)
 
