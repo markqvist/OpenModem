@@ -1,0 +1,51 @@
+Part        Value      
+
+R1          27                        
+R2          27                        
+R3          270                       
+R4          270                       
+R6          10k                       
+R7          10k                       
+R8          10k                       
+R9          100k                      
+R10         100k                      
+R11         2k2                       
+R12         270                       
+R13         1k                        
+R14         270                       
+R15         10k                       
+R16         2k2  
+
+C0          10uF                      
+C1          10uF                      
+C2          100nF                     
+C3          1uF                       
+C4          100nF                     
+C5          100nF                     
+C6          1uF                       
+C7          100nF                     
+C8          1uF                       
+C9          1uF                       
+C10         1uF                       
+C11         1uF                       
+C12         100nF                     
+C13         47pF                      
+C14         47pF                      
+C15         30pF                      
+C16         30pF                      
+C17         1uF   
+
+Q1  
+
+LED_COM                               
+LED_RX                                
+LED_TX                                
+LED_STATUS                            
+USB   
+
+IC_DAC      MAX5480BCEE+21-0055H_16-L 
+IC_PSU5V    LP2986IM-5.0_NOPB         
+IC_USB      FT230XS                   
+IC_SD_BUF   CD74HC4050M        
+
+XTAL        20MHz              
