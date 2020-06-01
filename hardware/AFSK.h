@@ -182,18 +182,18 @@ typedef struct Afsk
     // Demodulation values
     FIFOBuffer delayFifo;                   // Delayed FIFO for frequency discrimination
     #if BITRATE == 1200
-        int8_t delayBuf[ADC_SAMPLESPERBIT / 2 + 1]; // Actual data storage for said FIFO
+        int8_t delayBuf[(ADC_SAMPLESPERBIT / 2 - 1) + 1]; // Actual data storage for said FIFO
     #elif BITRATE == 2400
-        int8_t delayBuf[7 + 1];
+        int8_t delayBuf[(7) + 1];
     #elif BITRATE == 300
-        int8_t delayBuf[9 + 1];
+        int8_t delayBuf[(9) + 1];
     #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data
-    uint8_t rxBuf[CONFIG_AFSK_RX_BUFLEN];   // Actual data storage for said FIFO
+    uint8_t rxBuf[CONFIG_AFSK_RX_BUFLEN+1]; // Actual data storage for said FIFO
 
     FIFOBuffer txFifo;                      // FIFO for transmit data
-    uint8_t txBuf[CONFIG_AFSK_TX_BUFLEN];   // Actual data storage for said FIFO
+    uint8_t txBuf[CONFIG_AFSK_TX_BUFLEN+1]; // Actual data storage for said FIFO
 
     int16_t iirX[2];                        // IIR Filter X cells
     int16_t iirY[2];                        // IIR Filter Y cells

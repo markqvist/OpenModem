@@ -106,13 +106,13 @@ void AFSK_init(Afsk *afsk) {
     afsk->silentSamples = 0;
 
     // Initialise FIFO buffers
-    fifo_init(&afsk->delayFifo, (uint8_t *)afsk->delayBuf, sizeof(afsk->delayBuf));
-    fifo_init(&afsk->rxFifo, afsk->rxBuf, sizeof(afsk->rxBuf));
-    fifo_init(&afsk->txFifo, afsk->txBuf, sizeof(afsk->txBuf));
+    fifo_init(&afsk->delayFifo, (uint8_t *)afsk->delayBuf, sizeof(afsk->delayBuf)-1);
+    fifo_init(&afsk->rxFifo, afsk->rxBuf, CONFIG_AFSK_RX_BUFLEN);
+    fifo_init(&afsk->txFifo, afsk->txBuf, CONFIG_AFSK_TX_BUFLEN);
 
     // Fill delay FIFO with zeroes
-    for (int i = 0; i<ADC_SAMPLESPERBIT / 2; i++) {
-        fifo_push(&afsk->delayFifo, 0);
+    while (fifo_isfull(&afsk->delayFifo)) {
+        fifo_push_locked(&afsk->delayFifo, 0);
     }
 
     AFSK_hw_init();
