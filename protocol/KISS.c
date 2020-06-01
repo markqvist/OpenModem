@@ -460,24 +460,26 @@ void kiss_serialCallback(uint8_t sbyte) {
     if (IN_FRAME && sbyte == FEND && command == CMD_DATA) {
         IN_FRAME = false;
 
-        if (queue_height < CONFIG_QUEUE_MAX_LENGTH && queued_bytes < CONFIG_QUEUE_SIZE) {
-            size_t s = current_packet_start;
-            size_t e = queue_cursor-1; if (e == -1) e = CONFIG_QUEUE_SIZE-1;
-            size_t l;
+        ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
+            if (!fifo16_isfull(&packet_starts) && queued_bytes < CONFIG_QUEUE_SIZE) {
+                size_t s = current_packet_start;
+                size_t e = queue_cursor-1; if (e == -1) e = CONFIG_QUEUE_SIZE-1;
+                size_t l;
 
-            if (s != e) {
-                l = (s < e) ? e - s + 1 : CONFIG_QUEUE_SIZE - s + e + 1;
-            } else {
-                l = 1;
-            }
+                if (s != e) {
+                    l = (s < e) ? e - s + 1 : CONFIG_QUEUE_SIZE - s + e + 1;
+                } else {
+                    l = 1;
+                }
 
-            if (l >= AX25_MIN_PAYLOAD) {
-                queue_height++;
+                if (l >= AX25_MIN_PAYLOAD) {
+                    queue_height++;
 
-                fifo16_push_locked(&packet_starts, s);
-                fifo16_push_locked(&packet_lengths, l);
+                    fifo16_push(&packet_starts, s);
+                    fifo16_push(&packet_lengths, l);
 
-                current_packet_start = queue_cursor;
+                    current_packet_start = queue_cursor;
+                }
             }
         }
         

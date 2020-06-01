@@ -26,8 +26,8 @@ void serial_init(Serial *serial) {
     serial->uart0 = uart0_fd;
     serial->uart1 = uart1_fd;
 
-    fifo_init(&uart0FIFO, uart0Buf, sizeof(uart0Buf));
-    fifo_init(&uart1FIFO, uart1Buf, sizeof(uart1Buf));
+    fifo_init(&uart0FIFO, uart0Buf, CONFIG_UART0_BUFFER_SIZE);
+    fifo_init(&uart1FIFO, uart1Buf, CONFIG_UART1_BUFFER_SIZE);
 
 }
 
@@ -82,7 +82,7 @@ ISR(USART0_RX_vect) {
         LED_COM_ON();
         if (!fifo_isfull(&uart0FIFO)) {
             char c = uart0_getchar_nowait();
-            fifo_push(&uart0FIFO, c);
+            fifo_push_locked(&uart0FIFO, c);
         } else {
             uart0_getchar_nowait();
         }

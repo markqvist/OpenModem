@@ -15,10 +15,10 @@ typedef struct Serial {
 } Serial;
 
 FIFOBuffer uart0FIFO;
-uint8_t uart0Buf[CONFIG_UART0_BUFFER_SIZE];
+uint8_t uart0Buf[CONFIG_UART0_BUFFER_SIZE+1];
 
 FIFOBuffer uart1FIFO;
-uint8_t uart1Buf[CONFIG_UART1_BUFFER_SIZE];
+uint8_t uart1Buf[CONFIG_UART1_BUFFER_SIZE+1];
 
 void serial_init(Serial *serial);
 bool serial_available(uint8_t index);
