@@ -82,7 +82,7 @@ ISR(USART0_RX_vect) {
         LED_COM_ON();
         if (!fifo_isfull(&uart0FIFO)) {
             char c = uart0_getchar_nowait();
-            fifo_push_locked(&uart0FIFO, c);
+            fifo_push(&uart0FIFO, c);
         } else {
             uart0_getchar_nowait();
         }
