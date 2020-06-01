@@ -26,8 +26,14 @@
 // Serial settings
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 5760
-#define CONFIG_QUEUE_MAX_LENGTH 32
+
+// Queue settings. Don't be fooled by free
+// memory indications while compiling! With
+// dynamic allocations by SD, exFAT and AES,
+// these are more or less the hard limit in
+// the current configuration.
+#define CONFIG_QUEUE_SIZE 5000
+#define CONFIG_QUEUE_MAX_LENGTH 15
 #define CONFIG_UART0_BUFFER_SIZE 1536
 #define CONFIG_UART1_BUFFER_SIZE 128
 #define CONFIG_SERIAL_TIMEOUT_MS 10
