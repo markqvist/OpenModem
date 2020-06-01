@@ -84,7 +84,7 @@ ISR(USART0_RX_vect) {
             char c = uart0_getchar_nowait();
             fifo_push(&uart0FIFO, c);
         } else {
-            //uart0_getchar_nowait();
+            uart0_getchar_nowait();
         }
     }
 }
@@ -95,7 +95,7 @@ ISR(USART1_RX_vect) {
             char c = uart1_getchar_nowait();
             fifo_push(&uart1FIFO, c);
         } else {
-            //uart1_getchar_nowait();
+            uart1_getchar_nowait();
         }
     }
 }
