@@ -5,7 +5,7 @@
 
 // Version info
 #define MAJ_VERSION  0x01
-#define MIN_VERSION  0x03
+#define MIN_VERSION  0x04
 
 // CPU settings
 #define TARGET_CPU m1284p

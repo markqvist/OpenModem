@@ -184,9 +184,9 @@ typedef struct Afsk
     #if BITRATE == 1200
         int8_t delayBuf[(ADC_SAMPLESPERBIT / 2 - 1) + 1]; // Actual data storage for said FIFO
     #elif BITRATE == 2400
-        int8_t delayBuf[(7) + 1];
+        int8_t delayBuf[(ADC_SAMPLESPERBIT / 2 - 1) + 1];
     #elif BITRATE == 300
-        int8_t delayBuf[(9) + 1];
+        int8_t delayBuf[(ADC_SAMPLESPERBIT / 2 - 1) + 1];
     #endif
 
     FIFOBuffer rxFifo;                      // FIFO for received data
