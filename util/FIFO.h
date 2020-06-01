@@ -75,7 +75,7 @@ static inline unsigned char fifo_pop_locked(FIFOBuffer *f) {
 
 inline void fifo_init(FIFOBuffer *f, unsigned char *buffer, size_t size) {
   f->head = f->tail = f->begin = buffer;
-  f->end = buffer + size -1;
+  f->end = buffer + size;
 }
 
 inline size_t fifo_len(FIFOBuffer *f) {

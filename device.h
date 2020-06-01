@@ -5,7 +5,7 @@
 
 // Version info
 #define MAJ_VERSION  0x01
-#define MIN_VERSION  0x01
+#define MIN_VERSION  0x02
 
 // CPU settings
 #define TARGET_CPU m1284p
@@ -26,8 +26,8 @@
 // Serial settings
 #define SERIAL_DEBUG false
 #define TX_MAXWAIT 2UL
-#define CONFIG_QUEUE_SIZE 6000
-#define CONFIG_QUEUE_MAX_LENGTH 15
+#define CONFIG_QUEUE_SIZE 5760
+#define CONFIG_QUEUE_MAX_LENGTH 32
 #define CONFIG_UART0_BUFFER_SIZE 1536
 #define CONFIG_UART1_BUFFER_SIZE 128
 #define CONFIG_SERIAL_TIMEOUT_MS 10

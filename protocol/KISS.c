@@ -52,11 +52,12 @@ void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser) {
     channel = afsk;
 
     memset(packet_queue, 0, sizeof(packet_queue));
-    memset(packet_starts_buf, 0, sizeof(packet_starts));
-    memset(packet_lengths_buf, 0, sizeof(packet_lengths));
 
-    fifo16_init(&packet_starts, packet_starts_buf, sizeof(packet_starts_buf));
-    fifo16_init(&packet_lengths, packet_lengths_buf, sizeof(packet_lengths_buf));
+    memset(packet_starts_buf, 0, sizeof(packet_starts));
+    fifo16_init(&packet_starts, packet_starts_buf, CONFIG_QUEUE_MAX_LENGTH);
+    
+    memset(packet_lengths_buf, 0, sizeof(packet_lengths));
+    fifo16_init(&packet_lengths, packet_lengths_buf, CONFIG_QUEUE_MAX_LENGTH);
 }
 
 void kiss_poll(void) {
