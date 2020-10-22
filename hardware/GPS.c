@@ -39,6 +39,7 @@ void gps_init(Serial *ser) {
 	gps_speed_kmh = 0;
 	gps_bearing = 0;
 
+	gps_fix = false;
 	gps_time_set = false;
 
 	if (gps_detect()) {
@@ -46,6 +47,8 @@ void gps_init(Serial *ser) {
 		GPS_DDR |= _BV(GPS_EN_PIN);
 
 		if (config_gps_mode == CONFIG_GPS_AUTODETECT || config_gps_mode == CONFIG_GPS_REQUIRED) {
+			gps_powerup();
+
 			serial_setbaudrate_9600(1);
 			delay_ms(100);
 
@@ -59,7 +62,6 @@ void gps_init(Serial *ser) {
 			gps_send_command(PMTK_SET_NMEA_OUTPUT_RMCGGA);
 
 			gps_power = true;
-			gps_powerup();
 		} else {
 			gps_power = false;
 			gps_powerdown();
@@ -70,6 +72,7 @@ void gps_init(Serial *ser) {
 		gps_power = false;
 	}
 }
+
 
 void gps_update_rtc(void) {
 	struct tm now;

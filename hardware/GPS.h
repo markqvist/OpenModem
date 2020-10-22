@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "device.h"
 #include "util/time.h"
-#include "hardware/serial.h"
+#include "hardware/Serial.h"
 
 #define NMEA_MAX_LENGTH 128
 

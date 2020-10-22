@@ -8,7 +8,7 @@
 #include <stdio.h>
 #include "device.h"
 #include "util/time.h"
-#include "hardware/serial.h"
+#include "hardware/Serial.h"
 
 void bluetooth_init(void);
 bool bluetooth_enabled(void);
