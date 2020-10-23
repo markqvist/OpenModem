@@ -16,6 +16,7 @@
 #include "hardware/SD.h"
 #include "hardware/Crypto.h"
 #include "hardware/Bluetooth.h"
+#include "hardware/BME280.h"
 #include "hardware/GPS.h"
 #include "protocol/AX25.h"
 #include "protocol/KISS.h"
@@ -92,7 +93,33 @@ void init(void) {
     gps_init(&serial);
     usrio_init();
 
+    if (config_sensors_enabled) {
+        if (config_sensor_bme280_enabled) bme280_init(config_sensor_bme280_cs_pin);
+    }
+
     system_check();
+
+    if (config_user_jobs_enabled) user_init();
+}
+
+mtime_t sensor_poll_time = 0;
+void sensor_jobs(void) {
+    if (rtc_milliseconds() > sensor_poll_time+config_sensor_interval_ms) {
+        if (config_sensor_bme280_enabled && bme280_ready) {
+            bme280_poll();
+        }
+
+        sensor_poll_time = rtc_milliseconds();
+    }
+}
+
+void user_init(void) {
+    // Place user-specified initialisation code here
+}
+
+
+void user_jobs(void) {
+    // Place user-specified tasks and jobs here
 }
 
 
@@ -105,6 +132,9 @@ int main (void) {
         kiss_csma();
         sd_jobs();
         gps_poll();
+
+        if (config_sensors_enabled) sensor_jobs();
+        if (config_user_jobs_enabled) user_jobs();
     }
 
     return(0);

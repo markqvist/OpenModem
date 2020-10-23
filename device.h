@@ -56,6 +56,14 @@
 // Packet settings
 #define CONFIG_PASSALL false
 
+// User jobs
+#define CONFIG_USER_JOBS_ENABLED true
+
+// External sensor support
+#define CONFIG_SENSORS_ENABLED true
+#define CONFIG_SENSORS_INTERVAL_MS 1000
+#define CONFIG_BME280_ENABLED true
+
 // Port settings
 #if TARGET_CPU == m1284p
     #define ADC_PORT  	PORTA
@@ -117,5 +125,9 @@
 #define PATH_ENTROPY_SOURCE "OpenModem/entropy.source"
 #define PATH_AES_128_KEY "OpenModem/aes128.key"
 #define PATH_CRYPTO_DISABLE "OpenModem/aes128.disable"
+
+// User-scriptable forward function declarations
+void user_init(void);
+void user_jobs(void);
 
 #endif

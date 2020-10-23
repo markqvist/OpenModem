@@ -274,21 +274,7 @@ void gps_nmea_parse(uint8_t sentence_length) {
 							gps_t_year    = (nmea_date % 100);
 							gps_update_rtc();
 						}
-
-						// TODO: Remove this
-						// printf("GPS fix\r\n");
-						// printf("GPS satellites: %d\r\n", gps_sats);
-						// printf("GPS latitude: %d\" %d' %.2fs %c\r\n", gps_lat_degrees, gps_lat_minutes, gps_lat_seconds, gps_lat_sign);
-						// printf("GPS longtitude: %d\" %d' %.2fs %c\r\n", gps_lon_degrees, gps_lon_minutes, gps_lon_seconds, gps_lon_sign);
-						// printf("GPS coords: %.6f,%.6f\r\n", gps_lat, gps_lon);
-						// printf("GPS speed %.2f Km/h\r\n", gps_speed_kmh);
-						// printf("GPS speed %.2f knots\r\n", gps_speed_knots);
-						// printf("GPS bearing %.2f\r\n", gps_bearing);
-						// printf("GPS height above MSL: %.2f\r\n", gps_height_above_msl);
-						// printf("GPS altitude: %.2f\r\n", gps_altitude);
-						// printf("GPS geoid height: %.2f\r\n", gps_geoid_height);
-						// printf("GPS HDOP: %.2f\r\n", gps_hdop);
-						// printf("GPS time %d/%d/%d %d:%d:%d UTC\r\n", gps_t_year, gps_t_month, gps_t_day, gps_t_hour, gps_t_minute, gps_t_second);
+						
 					} else {
 						gps_speed_knots = 0;
 						gps_speed_kmh = 0;

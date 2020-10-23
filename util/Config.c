@@ -30,7 +30,12 @@ void config_init(void) {
 }
 
 void config_init_ephemeral(void) {
+	config_user_jobs_enabled = CONFIG_USER_JOBS_ENABLED;
 	config_gps_nmea_output = CONFIG_GPS_NMEA_NONE;
+	config_sensors_enabled = CONFIG_SENSORS_ENABLED;
+	config_sensor_interval_ms = CONFIG_SENSORS_INTERVAL_MS;
+	config_sensor_bme280_enabled = CONFIG_BME280_ENABLED;
+	config_sensor_bme280_cs_pin = USR_IO_1;
 }
 
 void config_apply(void) {

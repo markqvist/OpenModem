@@ -74,7 +74,13 @@ uint8_t config_gps_nmea_output;
 uint8_t config_bluetooth_mode;
 uint8_t config_serial_baudrate;
 
+bool config_user_jobs_enabled;
 bool config_output_diagnostics;
+
+bool config_sensors_enabled;
+int32_t config_sensor_interval_ms;
+bool config_sensor_bme280_enabled;
+uint8_t config_sensor_bme280_cs_pin;
 
 void config_init(void);
 void config_init_ephemeral(void);
