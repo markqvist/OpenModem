@@ -119,6 +119,7 @@ void config_save_to_eeprom(void) {
 	config_data[i++] = config_gps_mode;
 	config_data[i++] = config_bluetooth_mode;
 	config_data[i++] = config_serial_baudrate;
+	config_data[i++] = config_invert_sddetect;
 
 	md5_hash_t checksum;
 	md5(&checksum, &config_data, config_data_size*8);
@@ -146,6 +147,7 @@ void config_load_defaults(void) {
 	config_bluetooth_mode = CONFIG_BLUETOOTH_AUTODETECT;
 	config_serial_baudrate = CONFIG_BAUDRATE_115200;
 	config_source = CONFIG_SOURCE_DEFAULT;
+	config_invert_sddetect = false;
 }
 
 void config_load_from_eeprom(void) {
@@ -169,6 +171,7 @@ void config_load_from_eeprom(void) {
 	config_gps_mode = config_data[ADDR_E_GPS_MODE];
 	config_bluetooth_mode = config_data[ADDR_E_BLUETOOTH_MODE];
 	config_serial_baudrate = config_data[ADDR_E_SERIAL_BAUDRATE];
+	config_invert_sddetect = config_data[ADDR_E_INVERT_SDDETECT];
 }
 
 bool config_validate_sd(void) {
@@ -241,6 +244,14 @@ void config_set_bt_mode(uint8_t mode) {
 	if (mode == CONFIG_BLUETOOTH_OFF) config_bluetooth_mode = CONFIG_BLUETOOTH_OFF;
 	if (mode == CONFIG_BLUETOOTH_AUTODETECT) config_bluetooth_mode = CONFIG_BLUETOOTH_AUTODETECT;
 	if (mode == CONFIG_BLUETOOTH_REQUIRED) config_bluetooth_mode = CONFIG_BLUETOOTH_REQUIRED;
+}
+
+void config_set_invert_sddetect(uint8_t invert_sddetect) {
+	if (invert_sddetect == 0x00) {
+		config_invert_sddetect = false;
+	} else {
+		config_invert_sddetect = true;
+	}
 }
 
 void EEPROM_writebyte(uint16_t addr, uint8_t data) {

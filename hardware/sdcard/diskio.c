@@ -16,12 +16,13 @@
 #include "diskio.h"
 #include "device.h"
 #include "hardware/LED.h"
+#include "util/Config.h"
 
 
 /* Port controls  (Platform dependent) */
 #define CS_LOW()	SD_CS_PORT &= ~(_BV(SD_CS_PIN))			/* CS=low */
 #define	CS_HIGH()	SD_CS_PORT |= _BV(SD_CS_PIN)			/* CS=high */
-#define MMC_CD		((SD_DETECT_INPUT & _BV(SD_DETECT_PIN)))	/* Card detected.   yes:true, no:false, default:true */
+#define MMC_CD		(config_invert_sddetect == false ? (SD_DETECT_INPUT & _BV(SD_DETECT_PIN)) : ((SD_DETECT_INPUT & _BV(SD_DETECT_PIN)) == 0))	/* Card detected.   yes:true, no:false, default:true */
 #define MMC_WP		(false)				/* Write protected. yes:true, no:false, default:false */
 #define	FCLK_SLOW()	SPCR = 0x52		/* Set slow clock (F_CPU / 64) */
 #define	FCLK_FAST()	SPCR = 0x50		/* Set fast clock (F_CPU / 2) */
@@ -578,6 +579,6 @@ void disk_timerproc(void) {
 	} else {
 		s |= (STA_NODISK | STA_NOINIT); /* Socket empty */
 	}							
-	
+
 	Stat = s;				/* Update MMC status */
 }

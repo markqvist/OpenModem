@@ -37,6 +37,7 @@
 #define CMD_NMEA 0x40
 #define CMD_PRINT_CONFIG 0xF0
 #define CMD_RETURN 0xFF
+#define CMD_INVERT_SDDETECT 0x15
 
 void kiss_init(AX25Ctx *ax25, Afsk *afsk, Serial *ser);
 void kiss_messageCallback(AX25Ctx *ctx);

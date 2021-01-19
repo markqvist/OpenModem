@@ -613,6 +613,15 @@ void kiss_serialCallback(uint8_t sbyte) {
             if (sbyte == 0x00) {
                 kiss_output_modem_mode();
             }
+        } else if (command == CMD_INVERT_SDDETECT) {
+            if (sbyte == FESC) { ESCAPE = true; } else {
+                if (ESCAPE) {
+                    if (sbyte == TFEND) sbyte = FEND;
+                    if (sbyte == TFESC) sbyte = FESC;
+                    ESCAPE = false;
+                }
+                config_set_invert_sddetect(sbyte);
+            }
         }
     }
 }

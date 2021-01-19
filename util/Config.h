@@ -22,8 +22,9 @@
 #define ADDR_E_GPS_MODE				0x0D
 #define ADDR_E_BLUETOOTH_MODE		0x0E
 #define ADDR_E_SERIAL_BAUDRATE		0x0F
-#define ADDR_E_CHECKSUM				0x10
-#define ADDR_E_END					0x20
+#define ADDR_E_INVERT_SDDETECT		0x10
+#define ADDR_E_CHECKSUM				0x11
+#define ADDR_E_END					0x21
 
 #define CONFIG_GPS_OFF				0x00
 #define CONFIG_GPS_AUTODETECT		0x01
@@ -73,6 +74,7 @@ uint8_t config_gps_mode;
 uint8_t config_gps_nmea_output;
 uint8_t config_bluetooth_mode;
 uint8_t config_serial_baudrate;
+bool config_invert_sddetect;
 
 bool config_user_jobs_enabled;
 bool config_output_diagnostics;
@@ -109,6 +111,7 @@ void config_set_log_packets(uint8_t log_packets);
 void config_set_nmea_output(uint8_t nmea_output);
 void config_set_gps_mode(uint8_t mode);
 void config_set_bt_mode(uint8_t mode);
+void config_set_invert_sddetect(uint8_t inv_sddetect);
 
 void config_enable_diagnostics(void);
 void config_disable_diagnostics(void);

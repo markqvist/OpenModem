@@ -250,7 +250,7 @@ bool bme280_init(uint8_t cs_usrio_pin) {
 
 	bme280_temperature_fine_adjust = BME280_TEMPERATURE_ADJUSTMENT;
 
-	USR_IO_DDR |= bme280_cs_usrio_pin;
+	USR_IO_DDR |= _BV(bme280_cs_usrio_pin);
 
 	SPI_DDR |= _BV(SPI_MOSI) | _BV(SPI_CLK);
     SPI_DDR &= ~(_BV(SPI_MISO));
