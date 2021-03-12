@@ -121,18 +121,3 @@ uint8_t EEPROM_readbyte(uint16_t addr);
 void EEPROM_writebyte(uint16_t addr, uint8_t data);
 
 #endif
-
-/*
-	CSMA P
-	CSMA Slot Time
-	Preamble
-	Tail
-
-	LED intensity
-	Output gain
-	Input gain
-
-	Pass-all
-
-	Log packets
-*/

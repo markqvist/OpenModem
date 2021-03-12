@@ -35,6 +35,10 @@ inline mtime_t ticks_to_ms(ticks_t ticks) {
     return DIV_ROUND(ticks, DIV_ROUND(CLOCK_TICKS_PER_SEC, 1000));
 }
 
+static inline mtime_t milliseconds(void) {
+    return ticks_to_ms(timer_clock());
+}
+
 static inline uint32_t rtc_seconds(void) {
     uint32_t result;
 
@@ -45,6 +49,10 @@ static inline uint32_t rtc_seconds(void) {
     return result;
 }
 
+static inline mtime_t rtc_milliseconds(void) {
+    return ticks_to_ms(timer_clock() % CLOCK_TICKS_PER_SEC);
+}
+
 static inline uint32_t rtc_unix_timestamp(void) {
     uint32_t result;
     ATOMIC_BLOCK(ATOMIC_RESTORESTATE) {
@@ -52,10 +60,6 @@ static inline uint32_t rtc_unix_timestamp(void) {
     }
 
     return result+UNIX_EPOCH_OFFSET;
-}
-
-static inline mtime_t rtc_milliseconds(void) {
-    return ticks_to_ms(timer_clock() % CLOCK_TICKS_PER_SEC);
 }
 
 static inline void rtc_set_seconds(uint32_t seconds) {

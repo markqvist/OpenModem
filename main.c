@@ -104,12 +104,12 @@ void init(void) {
 
 mtime_t sensor_poll_time = 0;
 void sensor_jobs(void) {
-    if (rtc_milliseconds() > sensor_poll_time+config_sensor_interval_ms) {
+    if (milliseconds() > sensor_poll_time) {
         if (config_sensor_bme280_enabled && bme280_ready) {
             bme280_poll();
         }
 
-        sensor_poll_time = rtc_milliseconds();
+        sensor_poll_time = milliseconds() + config_sensor_interval_ms;
     }
 }
 
