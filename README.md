@@ -26,7 +26,7 @@ Please refer to the manual and instructions posted at the [OpenModem page](https
 You can help support the continued development of open, free and private communications systems by donating via one of the following channels:
 
 - Monero:
- ```
+  ```
   84FpY1QbxHcgdseePYNmhTHcrgMX4nFfBYtz2GKYToqHVVhJp8Eaw1Z1EedRnKD19b3B8NiLCGVxzKV17UMmmeEsCrPyA5w
   ```
 - Ethereum
